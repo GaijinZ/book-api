@@ -45,7 +45,7 @@ func (h *DBPoolHandler) AddUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"User added successfully": newUser})
+	c.JSON(http.StatusCreated, gin.H{"message": "User added successfully"})
 }
 
 func (h *DBPoolHandler) UpdateUser(c *gin.Context) {
@@ -63,8 +63,8 @@ func (h *DBPoolHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	updateQuery := "UPDATE users SET firstname=$1, lastname=$2, email=$3, password=$4, role=$5 WHERE id=$6"
-	result, err := h.DBPool.Exec(context.Background(), updateQuery, updateUser.Firstname, updateUser.Lastname, updateUser.Email, updateUser.Password, updateUser.Role, userID)
+	updateQuery := "UPDATE users SET firstname=$1, lastname=$2, email=$3, role=$4 WHERE id=$5"
+	result, err := h.DBPool.Exec(context.Background(), updateQuery, updateUser.Firstname, updateUser.Lastname, updateUser.Email, updateUser.Role, userID)
 	if err != nil {
 		errorMessage := "Failed to update user in database: " + err.Error()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
@@ -91,8 +91,8 @@ func (h *DBPoolHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	getQuery := "SELECT id, firstname, lastname, email, password, role FROM users WHERE id=$1"
-	err = h.DBPool.QueryRow(context.Background(), getQuery, userID).Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Password, &user.Role)
+	getQuery := "SELECT id, firstname, lastname, email, role FROM users WHERE id=$1"
+	err = h.DBPool.QueryRow(context.Background(), getQuery, userID).Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Role)
 	if err != nil {
 		errorMessage := "QueryRow failed: " + err.Error()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
@@ -117,7 +117,7 @@ func (h *DBPoolHandler) GetAllUsers(c *gin.Context) {
 	for rows.Next() {
 		var user models.User
 
-		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Password, &user.Role)
+		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Role)
 		if err != nil {
 			errorMessage := "QueryRow failed: " + err.Error()
 			c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
@@ -142,8 +142,20 @@ func (h *DBPoolHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	query := "DELETE FROM users WHERE id=$1"
+	exists, err := checkUserExists(userID, h.DBPool)
+	if err != nil {
+		errorMessage := "Checking user ID error: " + string(rune(userID))
+		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		return
+	}
 
+	if !exists {
+		errorMessage := "User ID doesn't exists: " + string(rune(userID))
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+		return
+	}
+
+	query := "DELETE FROM users WHERE id=$1"
 	_, err = h.DBPool.Exec(context.Background(), query, userID)
 	if err != nil {
 		errorMessage := fmt.Sprintf("User delete error ID %d: %s", userID, err.Error())
@@ -152,4 +164,17 @@ func (h *DBPoolHandler) DeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+func checkUserExists(userID int, db *pgxpool.Pool) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM users WHERE id=$1)"
+
+	var exists bool
+	err := db.QueryRow(context.Background(), query, userID).Scan(&exists)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Checking user ID error %d: %s", userID, err.Error())
+		return false, fmt.Errorf(errorMessage)
+	}
+
+	return exists, nil
 }

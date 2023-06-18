@@ -15,11 +15,11 @@ func Run(port string) {
 
 	router := gin.Default()
 	v1 := router.Group("/v1")
-	v1.POST("/add-user", h.AddUser)
-	v1.PUT("/update-user/:id", h.UpdateUser)
-	v1.GET("/get-user/:id", h.GetUser)
-	v1.GET("/get-users", h.GetAllUsers)
-	v1.DELETE("/delete-user/:id", h.DeleteUser)
+	v1.POST("/users", h.AddUser)
+	v1.PUT("/users/:id", h.UpdateUser)
+	v1.GET("/users/:id", h.GetUser)
+	v1.GET("/users", h.GetAllUsers)
+	v1.DELETE("/users/:id", h.DeleteUser)
 
 	router.Run(port)
 }
