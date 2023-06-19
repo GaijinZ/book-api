@@ -15,6 +15,8 @@ type Userer interface {
 	AddUser(c *gin.Context)
 	UpdateUser(c *gin.Context)
 	GetUser(c *gin.Context)
+	GetAllUsers(c *gin.Context)
+	DeleteUser(c *gin.Context)
 }
 
 type DBPoolHandler struct {
