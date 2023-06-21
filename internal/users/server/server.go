@@ -3,6 +3,7 @@ package server
 import (
 	"userapi/internal/users/db/postgres"
 	"userapi/internal/users/handler"
+	"userapi/internal/users/repository"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +12,8 @@ func Run(port string) {
 	dbPool := postgres.GetPostgresConnectionString()
 	defer dbPool.Close()
 
-	h := handler.DBPoolHandler{DBPool: dbPool}
+	r := repository.NewUserRepository(dbPool)
+	h := handler.NewUserHandler(r)
 
 	router := gin.Default()
 	v1 := router.Group("/v1")
