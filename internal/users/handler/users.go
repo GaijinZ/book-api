@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"userapi/internal/users/models"
 	"userapi/internal/users/repository"
+	"userapi/util"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,13 +30,20 @@ func NewUserHandler(userRepository *repository.UserRepository) *UserHandler {
 
 func (h *UserHandler) AddUser(c *gin.Context) {
 	var user models.User
+	var err error
 
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err = c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.userRepository.AddUser(&user, c)
+	user.Password, err = util.GenerateHashPassword(user.Password)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = h.userRepository.AddUser(&user, c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

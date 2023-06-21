@@ -12,16 +12,19 @@ func Run(port string) {
 	dbPool := postgres.GetPostgresConnectionString()
 	defer dbPool.Close()
 
-	r := repository.NewUserRepository(dbPool)
-	h := handler.NewUserHandler(r)
+	userRepository := repository.NewUserRepository(dbPool)
+	authRepository := repository.NewAuthRepository(dbPool)
+	authUser := handler.NewUserAuth(authRepository)
+	handlerUser := handler.NewUserHandler(userRepository)
 
 	router := gin.Default()
 	v1 := router.Group("/v1")
-	v1.POST("/users", h.AddUser)
-	v1.PUT("/users/:id", h.UpdateUser)
-	v1.GET("/users/:id", h.GetUser)
-	v1.GET("/users", h.GetAllUsers)
-	v1.DELETE("/users/:id", h.DeleteUser)
+	v1.POST("/users/login", authUser.Login)
+	v1.POST("/users", handlerUser.AddUser)
+	v1.PUT("/users/:id", handlerUser.UpdateUser)
+	v1.GET("/users/:id", handlerUser.GetUser)
+	v1.GET("/users", handlerUser.GetAllUsers)
+	v1.DELETE("/users/:id", handlerUser.DeleteUser)
 
 	router.Run(port)
 }
