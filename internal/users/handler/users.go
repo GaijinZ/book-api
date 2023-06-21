@@ -8,6 +8,7 @@ import (
 	"userapi/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type Userer interface {
@@ -28,11 +29,18 @@ func NewUserHandler(userRepository *repository.UserRepository) *UserHandler {
 	}
 }
 
+var validate = validator.New()
+
 func (h *UserHandler) AddUser(c *gin.Context) {
 	var user models.User
 	var err error
 
 	if err = c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := validate.Struct(user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
