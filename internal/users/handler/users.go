@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"userapi/internal/users/models"
 	"userapi/internal/users/repository"
-	"userapi/util"
+	"userapi/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -45,7 +45,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 		return
 	}
 
-	user.Password, err = util.GenerateHashPassword(user.Password)
+	user.Password, err = utils.GenerateHashPassword(user.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

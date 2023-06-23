@@ -3,9 +3,10 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"time"
 	"userapi/internal/users/models"
 	"userapi/internal/users/repository"
-	"userapi/util"
+	"userapi/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,12 +37,25 @@ func (u *UserAuth) Login(c *gin.Context) {
 		return
 	}
 
-	check := util.CheckPasswordHash(user.Password, auth.Password)
+	check := utils.CheckPasswordHash(user.Password, auth.Password)
 	if !check {
 		err = errors.New("invalid credentials")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
+	token, err := utils.GenerateJWT(user)
+	if err != nil {
+		err = errors.New("token generate error")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.SetCookie("token", token, int(time.Now().Add(time.Hour*24).Unix()), "/", "localhost", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "User logged succesfully"})
+}
+
+func (u *UserAuth) Logout(c *gin.Context) {
+	c.SetCookie("token", "", -1, "/", "localhost", false, true)
+	c.JSON(200, gin.H{"success": "user logged out"})
 }
