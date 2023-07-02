@@ -1,8 +1,8 @@
 package main
 
 import (
+	"library/internal/users/server"
 	"os"
-	"userapi/internal/users/server"
 )
 
 func main() {

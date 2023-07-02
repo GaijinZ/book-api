@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"userapi/utils"
+	"library/utils"
 
 	"github.com/gin-gonic/gin"
 )

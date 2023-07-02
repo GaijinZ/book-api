@@ -1,10 +1,10 @@
 package server
 
 import (
-	"userapi/internal/users/db/postgres"
-	"userapi/internal/users/handler"
-	"userapi/internal/users/middleware"
-	"userapi/internal/users/repository"
+	"library/database/postgres"
+	"library/internal/users/handler"
+	"library/internal/users/middleware"
+	"library/internal/users/repository"
 
 	"github.com/gin-gonic/gin"
 )

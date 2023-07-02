@@ -1,8 +1,3 @@
-CREATE USER IF NOT EXISTS tmosto WITH PASSWORD 'tmosto' CREATEDB LOGIN;
-CREATE DATABASE IF NOT EXISTS usersdb WITH OWNER = tmosto;
-
-\c usersdb
-
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   firstname VARCHAR(100) NOT NULL,
@@ -12,5 +7,3 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(20),
   UNIQUE (email)
 );
-
-ALTER TABLE users OWNER TO tmosto;

@@ -1,11 +1,11 @@
 package handler
 
 import (
+	"library/internal/users/models"
+	"library/internal/users/repository"
+	"library/utils"
 	"net/http"
 	"strconv"
-	"userapi/internal/users/models"
-	"userapi/internal/users/repository"
-	"userapi/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

@@ -1,9 +1,9 @@
 package utils
 
 import (
+	"library/internal/users/models"
 	"os"
 	"time"
-	"userapi/internal/users/models"
 
 	"github.com/dgrijalva/jwt-go"
 )

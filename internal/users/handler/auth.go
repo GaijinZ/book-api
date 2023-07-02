@@ -2,11 +2,11 @@ package handler
 
 import (
 	"errors"
+	"library/internal/users/models"
+	"library/internal/users/repository"
+	"library/utils"
 	"net/http"
 	"time"
-	"userapi/internal/users/models"
-	"userapi/internal/users/repository"
-	"userapi/utils"
 
 	"github.com/gin-gonic/gin"
 )
