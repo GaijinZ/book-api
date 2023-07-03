@@ -6,11 +6,13 @@ sudo apt-get update
 
 sudo snap install go --classic
 
-sudo bash /bookapi/init-scripts/env-vars.sh
+bash /bookapi/init-scripts/env-vars.sh
 
 sudo apt-get install postgresql postgresql-contrib -y
 
 sudo -u postgres psql < /bookapi/init-scripts/users/postgres-init.sql
+
+sudo apt install make
 SCRIPT
 
 class VagrantPlugins::ProviderVirtualBox::Action::Network
