@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"library/internal/users/models"
+	"library/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -67,8 +68,8 @@ func (r *UserRepository) UpdateUser(id int, user *models.User, c *gin.Context) e
 }
 
 func (r *UserRepository) GetUser(id int, user *models.User, c *gin.Context) error {
-	getQuery := "SELECT id, firstname, lastname, email, role FROM users WHERE id=$1"
-	err := r.DBPool.QueryRow(context.Background(), getQuery, id).Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Role)
+	getQuery := "SELECT firstname, lastname, email, role FROM users WHERE id=$1"
+	err := r.DBPool.QueryRow(context.Background(), getQuery, id).Scan(&user.Firstname, &user.Lastname, &user.Email, &user.Role)
 	if err != nil {
 		errorMessage := "QueryRow failed: " + err.Error()
 		return fmt.Errorf(errorMessage)
@@ -109,7 +110,7 @@ func (r *UserRepository) GetAllUsers(c *gin.Context) ([]models.User, error) {
 }
 
 func (r *UserRepository) DeleteUser(id int, c *gin.Context) error {
-	exists, err := checkUserIDExists(id, r.DBPool)
+	exists, err := utils.CheckIDExists("users", id, r.DBPool)
 	if err != nil {
 		errorMessage := "Checking user ID error: " + string(rune(id))
 		return fmt.Errorf(errorMessage)
@@ -128,19 +129,6 @@ func (r *UserRepository) DeleteUser(id int, c *gin.Context) error {
 	}
 
 	return nil
-}
-
-func checkUserIDExists(userID int, db *pgxpool.Pool) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM users WHERE id=$1)"
-
-	var exists bool
-	err := db.QueryRow(context.Background(), query, userID).Scan(&exists)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Checking user ID error %d: %s", userID, err.Error())
-		return false, fmt.Errorf(errorMessage)
-	}
-
-	return exists, nil
 }
 
 func checkUserEmailExist(email string, db *pgxpool.Pool) (bool, error) {

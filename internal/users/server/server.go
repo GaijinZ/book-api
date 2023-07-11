@@ -26,11 +26,11 @@ func Run(port string) {
 	v1 := router.Group("/v1")
 	v1.Use(middleware.IsAuthorized())
 
-	v1.POST("/users", handlerUser.AddUser)
-	v1.PUT("/users/:id", handlerUser.UpdateUser)
-	v1.GET("/users/:id", handlerUser.GetUser)
-	v1.GET("/users", handlerUser.GetAllUsers)
-	v1.DELETE("/users/:id", handlerUser.DeleteUser)
+	v1.POST("/user", handlerUser.AddUser)
+	v1.PUT("/user/:user_id", handlerUser.UpdateUser)
+	v1.GET("/user/:user_id", handlerUser.GetUser)
+	v1.GET("/user", handlerUser.GetAllUsers)
+	v1.DELETE("/user/:user_id", handlerUser.DeleteUser)
 
 	router.Run(port)
 }

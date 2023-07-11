@@ -51,6 +51,12 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 		return
 	}
 
+	err = user.ValidatePassword()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	err = h.userRepository.AddUser(&user, c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -63,7 +69,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 
-	userID, err := strconv.Atoi(c.Param("id"))
+	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
@@ -87,7 +93,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) GetUser(c *gin.Context) {
 	var user models.User
 
-	userID, err := strconv.Atoi(c.Param("id"))
+	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
@@ -113,7 +119,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("id"))
+	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
