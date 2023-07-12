@@ -5,6 +5,7 @@ import (
 	"library/internal/users/models"
 	"library/internal/users/repository"
 	"library/utils"
+	middleware "library/utils/middleware"
 	"net/http"
 	"time"
 
@@ -44,7 +45,7 @@ func (u *UserAuth) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(user)
+	token, err := middleware.GenerateJWT(user)
 	if err != nil {
 		err = errors.New("token generate error")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})

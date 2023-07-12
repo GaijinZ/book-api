@@ -1,8 +1,6 @@
-package middleware
+package utils
 
 import (
-	"library/utils"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,7 +13,7 @@ func IsAuthorized() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := utils.VerifyJWT(cookie)
+		claims, err := VerifyJWT(cookie)
 		if err != nil {
 			c.JSON(401, gin.H{"error": "unauthorized"})
 			c.Abort()

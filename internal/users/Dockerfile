@@ -10,7 +10,9 @@ RUN go mod download
 COPY internal/users ./internal/users
 COPY cmd/users ./cmd/users
 COPY database/postgres ./database/postgres
-COPY utils ./utils
+COPY utils/middleware ./utils/middleware
+COPY utils/password-hash.go ./utils/password-hash.go
+COPY utils/sql.go ./utils/sqp.go
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /userapi-build ./cmd/users
 

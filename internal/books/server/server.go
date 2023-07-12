@@ -4,7 +4,7 @@ import (
 	"library/database/postgres"
 	"library/internal/books/handler"
 	"library/internal/books/repository"
-	"library/internal/users/middleware"
+	middleware "library/utils/middleware"
 
 	"github.com/gin-gonic/gin"
 )
