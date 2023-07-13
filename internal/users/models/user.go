@@ -1,6 +1,9 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
 
 type User struct {
 	ID        int    `json:"id,omitempty" form:"id"`
@@ -16,7 +19,17 @@ type Authentication struct {
 	Password string `json:"password" form:"password"`
 }
 
-func (u *User) ValidatePassword() error {
+func (u *User) ValidateUser() error {
+	validNameRegex := regexp.MustCompile(`^[a-zA-Z]+$`)
+
+	if !validNameRegex.MatchString(u.Firstname) {
+		return fmt.Errorf("firstname contains forbidden characters")
+	}
+
+	if !validNameRegex.MatchString(u.Lastname) {
+		return fmt.Errorf("lastname contains forbidden characters")
+	}
+
 	if u.Password == "" {
 		return fmt.Errorf("password is required for new user creation")
 	}

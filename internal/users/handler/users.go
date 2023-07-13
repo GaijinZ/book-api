@@ -51,7 +51,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 		return
 	}
 
-	err = user.ValidatePassword()
+	err = user.ValidateUser()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
