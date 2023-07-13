@@ -10,7 +10,6 @@ type Author struct {
 }
 
 type Book struct {
-	ID            int    `json:"id,omitempty" form:"id"`
 	Name          string `json:"name,omitempty" form:"name"`
 	DatePublished string `json:"date_published,omitempty" form:"date_published"`
 	ISBN          string `json:"isbn,omitempty" form:"isbn"`

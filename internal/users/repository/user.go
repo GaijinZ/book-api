@@ -81,7 +81,7 @@ func (r *UserRepository) GetUser(id int, user *models.User, c *gin.Context) erro
 func (r *UserRepository) GetAllUsers(c *gin.Context) ([]models.User, error) {
 	var users []models.User
 
-	getAllQuery := "SELECT id, firstname, lastname, email, role FROM users ORDER BY id"
+	getAllQuery := "SELECT firstname, lastname, email, role FROM users ORDER BY id"
 	rows, err := r.DBPool.Query(context.Background(), getAllQuery)
 	if err != nil {
 		errorMessage := "QueryRow failed: " + err.Error()
@@ -92,7 +92,7 @@ func (r *UserRepository) GetAllUsers(c *gin.Context) ([]models.User, error) {
 	for rows.Next() {
 		var user models.User
 
-		err := rows.Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Email, &user.Role)
+		err := rows.Scan(&user.Firstname, &user.Lastname, &user.Email, &user.Role)
 		if err != nil {
 			errorMessage := "QueryRow failed: " + err.Error()
 			return users, fmt.Errorf(errorMessage)

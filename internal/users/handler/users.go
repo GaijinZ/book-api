@@ -41,7 +41,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 	}
 
 	if err := validate.Struct(user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 
 	err = h.userRepository.AddUser(&user, c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
@@ -83,7 +83,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	err = h.userRepository.UpdateUser(userID, &user, c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -96,13 +96,13 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
 	err = h.userRepository.GetUser(userID, &user, c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"user": user})
@@ -122,7 +122,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 

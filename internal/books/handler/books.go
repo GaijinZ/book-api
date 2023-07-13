@@ -35,7 +35,7 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		errorMessage := "Invalid user ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
@@ -68,7 +68,7 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 	bookID, err := strconv.Atoi(c.Param("book_id"))
 	if err != nil {
 		errorMessage := "Wrong book ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
@@ -86,11 +86,11 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 
 	err = b.bookRepository.UpdateBook(bookID, book, c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"Book updated successfully": book})
+	c.JSON(http.StatusCreated, gin.H{})
 }
 
 func (b *BookHandler) GetBook(c *gin.Context) {
@@ -99,13 +99,13 @@ func (b *BookHandler) GetBook(c *gin.Context) {
 	bookID, err := strconv.Atoi(c.Param("book_id"))
 	if err != nil {
 		errorMessage := "Wrong book ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
 	err = b.bookRepository.GetBook(bookID, &book, c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -126,7 +126,7 @@ func (b *BookHandler) DeleteBook(c *gin.Context) {
 	bookID, err := strconv.Atoi(c.Param("book_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
