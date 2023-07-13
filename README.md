@@ -3,7 +3,6 @@
 * [Technologies](#technologies)
 * [Requirements](#requirements)
 * [Run app](#run)
-* * [Run app](#run)
 
 ## General info
 Bookapi app is use to add, update, delete and view all books by user in Postgres database.
