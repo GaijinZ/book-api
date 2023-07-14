@@ -1,7 +1,10 @@
 package main
 
-import "library/internal/books/server"
+import (
+	"library/internal/books/server"
+	"os"
+)
 
 func main() {
-	server.Run(":5001")
+	server.Run(":" + os.Getenv("BOOKS_SERVER_PORT"))
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"library/internal/books/models"
-	"library/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -143,23 +142,36 @@ func (b *BookRepository) GetAllBooks(c *gin.Context) ([]models.Book, error) {
 }
 
 func (b *BookRepository) DeleteBook(id int, c *gin.Context) error {
-	exists, err := utils.CheckIDExists("books", id, b.DBPool)
-	if err != nil {
-		errorMessage := "Checking book ID error: " + string(rune(id))
-		return fmt.Errorf(errorMessage)
-	}
-
-	if !exists {
-		errorMessage := "Book ID doesn't exists: " + string(rune(id))
-		return fmt.Errorf(errorMessage)
-	}
-
 	query := "DELETE FROM books WHERE id=$1"
-	_, err = b.DBPool.Exec(context.Background(), query, id)
+	_, err := b.DBPool.Exec(context.Background(), query, id)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Book delete error ID %d: %s", id, err.Error())
 		return fmt.Errorf(errorMessage)
 	}
 
 	return nil
+}
+
+func IsAssigned(bookID, userID int, db *pgxpool.Pool) (bool, error) {
+	query := "SELECT EXISTS (SELECT 1 FROM books WHERE id = $1 AND user_id = $2)"
+
+	var exists bool
+	err := db.QueryRow(context.Background(), query, bookID, userID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("error checking book assignment: %w", err)
+	}
+
+	return exists, nil
+}
+
+func ValidateISBNExists(isbn string, db *pgxpool.Pool) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM books WHERE isbn = $1)"
+
+	var exists bool
+	err := db.QueryRow(context.Background(), query, isbn).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("error validating ISBN %s: %w", isbn, err)
+	}
+
+	return exists, nil
 }

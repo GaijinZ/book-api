@@ -13,8 +13,7 @@ func CheckIDExists(table string, id int, db *pgxpool.Pool) (bool, error) {
 	var exists bool
 	err := db.QueryRow(context.Background(), query, id).Scan(&exists)
 	if err != nil {
-		errorMessage := fmt.Sprintf("Checking ID error %d: %s", id, err.Error())
-		return false, fmt.Errorf(errorMessage)
+		return false, fmt.Errorf("error checking ID %d: %w", id, err)
 	}
 
 	return exists, nil

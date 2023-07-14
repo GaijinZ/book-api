@@ -3,6 +3,7 @@ package utils
 import (
 	"library/internal/users/models"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -10,7 +11,9 @@ import (
 
 func GenerateJWT(user models.User) (string, error) {
 	claims := &models.Claims{
-		Role: user.Role,
+		UserID: strconv.Itoa(user.ID),
+		Email:  user.Email,
+		Role:   user.Role,
 		StandardClaims: jwt.StandardClaims{
 			Subject:   user.Email,
 			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),

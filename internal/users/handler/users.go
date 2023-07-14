@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"library/internal/users/models"
 	"library/internal/users/repository"
 	"library/utils"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+
+	middleware "library/utils/middleware"
 )
 
 type Userer interface {
@@ -69,10 +72,21 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 
-	userID, err := strconv.Atoi(c.Param("user_id"))
+	token, err := c.Cookie("token")
 	if err != nil {
-		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, err := strconv.Atoi(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -93,10 +107,21 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) GetUser(c *gin.Context) {
 	var user models.User
 
-	userID, err := strconv.Atoi(c.Param("user_id"))
+	token, err := c.Cookie("token")
 	if err != nil {
-		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, err := strconv.Atoi(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -119,14 +144,32 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	userID, err := strconv.Atoi(c.Param("user_id"))
+	token, err := c.Cookie("token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	if claims.Role != "superuser" {
+		errorMessage := fmt.Errorf("not enough permissions")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
+		return
+	}
+
+	deleteUser, err := strconv.Atoi(c.Param("delete_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
 		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
-	err = h.userRepository.DeleteUser(userID, c)
+	err = h.userRepository.DeleteUser(deleteUser, c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

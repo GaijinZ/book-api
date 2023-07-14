@@ -8,6 +8,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
+	middleware "library/utils/middleware"
 )
 
 type Booker interface {
@@ -32,17 +34,40 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 	var book models.Book
 	var err error
 
-	userID, err := strconv.Atoi(c.Param("user_id"))
+	token, err := c.Cookie("token")
 	if err != nil {
-		errorMessage := "Invalid user ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, err := strconv.Atoi(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	book.UserID.ID = userID
 
 	if err = c.ShouldBindJSON(&book); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error11": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	isExisting, err := repository.ValidateISBNExists(book.ISBN, b.bookRepository.DBPool)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if isExisting {
+		errorMessage := "Book with this ISBn already exists"
+		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 		return
 	}
 
@@ -74,6 +99,50 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	exists, err := utils.CheckIDExists("books", bookID, b.bookRepository.DBPool)
+	if err != nil {
+		errorMessage := "Checking book ID error: " + string(rune(bookID))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
+		return
+	}
+
+	if !exists {
+		errorMessage := "Book ID doesn't exists: " + string(rune(bookID))
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+		return
+	}
+
+	token, err := c.Cookie("token")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, err := strconv.Atoi(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	isAssigned, err := repository.IsAssigned(bookID, userID, b.bookRepository.DBPool)
+	if err != nil {
+		errorMessage := "Error checking book assignment"
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
+		return
+	}
+
+	if !isAssigned {
+		errorMessage := "User is not the owner of the book"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
 		return
 	}
 
@@ -130,9 +199,53 @@ func (b *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.DeleteBook(bookID, c)
+	exists, err := utils.CheckIDExists("books", bookID, b.bookRepository.DBPool)
+	if err != nil {
+		errorMessage := "Checking book ID error: " + string(rune(bookID))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
+		return
+	}
+
+	if !exists {
+		errorMessage := "Book ID doesn't exists: " + string(rune(bookID))
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
+		return
+	}
+
+	token, err := c.Cookie("token")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	claims, err := middleware.VerifyJWT(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	userID, err := strconv.Atoi(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	isAssigned, err := repository.IsAssigned(bookID, userID, b.bookRepository.DBPool)
+	if err != nil {
+		errorMessage := "Error checking book assignment"
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
+		return
+	}
+
+	if !isAssigned {
+		errorMessage := "User is not the owner of the book"
+		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
+		return
+	}
+
+	err = b.bookRepository.DeleteBook(bookID, c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

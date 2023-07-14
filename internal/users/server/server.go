@@ -30,7 +30,7 @@ func Run(port string) {
 	v1.PUT("/users/:user_id", handlerUser.UpdateUser)
 	v1.GET("/users/:user_id", handlerUser.GetUser)
 	v1.GET("/users", handlerUser.GetAllUsers)
-	v1.DELETE("/users/:user_id", handlerUser.DeleteUser)
+	v1.DELETE("/users/:user_id/:delete_id", handlerUser.DeleteUser)
 
 	router.Run(port)
 }

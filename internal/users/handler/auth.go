@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"library/internal/users/models"
 	"library/internal/users/repository"
 	"library/utils"
@@ -37,7 +38,7 @@ func (u *UserAuth) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	fmt.Println("USER", user)
 	check := utils.CheckPasswordHash(user.Password, auth.Password)
 	if !check {
 		err = errors.New("invalid credentials")

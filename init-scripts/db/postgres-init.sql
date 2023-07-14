@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS books (
   date_published DATE,
   isbn VARCHAR(20),
   page_count INTEGER,
-  user_id INTEGER REFERENCES users (id),
+  user_id INTEGER REFERENCES users (id) ON DELETE CASCADE,
   author_id INTEGER REFERENCES authors (id)
 );
 

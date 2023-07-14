@@ -112,7 +112,7 @@ func (r *UserRepository) GetAllUsers(c *gin.Context) ([]models.User, error) {
 func (r *UserRepository) DeleteUser(id int, c *gin.Context) error {
 	exists, err := utils.CheckIDExists("users", id, r.DBPool)
 	if err != nil {
-		errorMessage := "Checking user ID error: " + string(rune(id))
+		errorMessage := "Checking user ID error: " + err.Error()
 		return fmt.Errorf(errorMessage)
 	}
 

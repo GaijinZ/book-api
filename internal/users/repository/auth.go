@@ -20,8 +20,8 @@ func NewAuthRepository(dbPool *pgxpool.Pool) *AuthRepository {
 }
 
 func (u *AuthRepository) Login(user *models.User, auth *models.Authentication, c *gin.Context) error {
-	query := "SELECT firstname, lastname, password, email, role FROM users WHERE email=$1"
-	err := u.DBPool.QueryRow(context.Background(), query, auth.Email).Scan(&user.Firstname, &user.Lastname, &user.Password, &user.Email, &user.Role)
+	query := "SELECT id, firstname, lastname, password, email, role FROM users WHERE email=$1"
+	err := u.DBPool.QueryRow(context.Background(), query, auth.Email).Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Password, &user.Email, &user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return err

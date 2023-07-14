@@ -22,11 +22,11 @@ type Authentication struct {
 func (u *User) ValidateUser() error {
 	validNameRegex := regexp.MustCompile(`^[a-zA-Z]+$`)
 
-	if !validNameRegex.MatchString(u.Firstname) {
+	if !validNameRegex.MatchString(u.Firstname) && len(u.Firstname) < 20 {
 		return fmt.Errorf("firstname contains forbidden characters")
 	}
 
-	if !validNameRegex.MatchString(u.Lastname) {
+	if !validNameRegex.MatchString(u.Lastname) && len(u.Firstname) < 20 {
 		return fmt.Errorf("lastname contains forbidden characters")
 	}
 
