@@ -66,7 +66,7 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 	}
 
 	if isExisting {
-		errorMessage := "Book with this ISBn already exists"
+		errorMessage := "Book with this ISBN already exists"
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 		return
 	}

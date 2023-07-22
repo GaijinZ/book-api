@@ -1,7 +1,7 @@
 package server
 
 import (
-	"library/database/postgres"
+	"library/internal/users/postgres"
 	"library/internal/users/handler"
 	"library/internal/users/repository"
 	middleware "library/utils/middleware"
