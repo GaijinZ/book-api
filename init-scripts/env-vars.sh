@@ -15,13 +15,12 @@ echo "export POSTGRES_USERSDB=usersdb" >> "$SOURCE_FILE"
 echo "export POSTGRES_USERS_PORT=5433" >> "$SOURCE_FILE"
 echo "export POSTGRES_BOOKSDB=booksdb" >> "$SOURCE_FILE"
 echo "export POSTGRES_BOOKS_PORT=5434" >> "$SOURCE_FILE"
-echo "export GOPATH=$HOME/go" >> "$SOURCE_FILE"
+echo "export GOPATH=/usr/local/go" >> "$SOURCE_FILE"
+echo "export GOROOT=/usr/local/go" >> "$SOURCE_FILE"
 echo "export PATH=$PATH:/usr/local/go/bin" >> "$SOURCE_FILE"
 echo "export SECRET_KEY=mysecretkeyshh" >> "$SOURCE_FILE"
-echo "POSTGRES_CONTAINER_IP=172.19.0.2" >> $SOURCE_FILE
-echo "NETWORK=library" >> "$SOURCE_FILE"
-echo "GOPATH=$HOME/go" >> "$SOURCE_FILE"
+echo "export POSTGRES_CONTAINER_IP=172.19.0.2" >> $SOURCE_FILE
+echo "export NETWORK=library" >> "$SOURCE_FILE"
+echo "export GOPATH=$HOME/go" >> "$SOURCE_FILE"
 
 echo "All variables has been saved in: $SOURCE_FILE"
-
-. $SOURCE_FILE

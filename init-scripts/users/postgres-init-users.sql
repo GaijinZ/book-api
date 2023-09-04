@@ -3,7 +3,7 @@ CREATE DATABASE usersdb WITH OWNER = tmosto;
 
 \c usersdb
 
-CREATE TABLE IF NOT EXISTS user (
+CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   firstname VARCHAR(100) NOT NULL,
   lastname VARCHAR(100) NOT NULL,
@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS user (
   UNIQUE (email)
 );
 
-ALTER TABLE user OWNER TO tmosto;
+ALTER TABLE users OWNER TO tmosto;

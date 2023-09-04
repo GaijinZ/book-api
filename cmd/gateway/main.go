@@ -1,10 +1,9 @@
 package main
 
-// import (
-// 	"library/internal/gateway/server"
-// 	"os"
-// )
+import (
+	gateway "library/internal/gateway/server"
+)
 
-// func main() {
-// 	server.Run(":" + os.Getenv("GATEWAY_SERVER_PORT"))
-// }
+func main() {
+	gateway.Run()
+}

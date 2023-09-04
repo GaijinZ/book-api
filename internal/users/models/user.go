@@ -7,8 +7,8 @@ import (
 
 type User struct {
 	ID        int    `json:"id,omitempty" form:"id"`
-	Firstname string `json:"firstname,omitempty" form:"firstname"`
-	Lastname  string `json:"lastname,omitempty" form:"lastname"`
+	Firstname string `json:"first_name,omitempty" form:"firstname"`
+	Lastname  string `json:"last_name,omitempty" form:"lastname"`
 	Email     string `json:"email,omitempty" form:"email" validate:"required,email"`
 	Password  string `json:"password,omitempty" form:"password"`
 	Role      string `json:"role,omitempty" form:"role"`

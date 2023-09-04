@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS book (
   isbn VARCHAR(50),
   page_count INTEGER,
   user_id INTEGER,
-  author_id INTEGER REFERENCES authors (id)
+  author_id INTEGER REFERENCES author (id)
 );
 
 ALTER TABLE author OWNER TO tmosto;

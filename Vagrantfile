@@ -4,15 +4,28 @@
 $setup = <<-SCRIPT
 sudo apt-get update
 
-sudo snap install go --classic
+wget https://dl.google.com/go/go1.21.0.linux-amd64.tar.gz
+sudo tar -C /usr/local/ -xzf go1.21.0.linux-amd64.tar.gz
 
-bash /bookapi/init-scripts/env-vars.sh
+/bookapi/init-scripts/env-vars.sh
+source ~/.bash_profile
 
 sudo apt-get install postgresql postgresql-contrib -y
 
-sudo -u postgres psql < /bookapi/init-scripts/users/postgres-init.sql
-
 sudo apt install make
+
+mkdir ~/usersdb_data
+mkdir ~/booksdb_data
+
+sudo pg_createcluster --datadir=~/usersdb_data 12 usersdb
+sudo pg_createcluster --datadir=~/booksdb_data 12 booksdb
+
+sudo pg_ctlcluster 12 usersdb start
+sudo pg_ctlcluster 12 booksdb start
+
+sudo -u postgres psql -p 5433 < /bookapi/init-scripts/users/postgres-init-users.sql
+sudo -u postgres psql -p 5434 < /bookapi/init-scripts/books/postgres-init-books.sql
+
 SCRIPT
 
 class VagrantPlugins::ProviderVirtualBox::Action::Network
@@ -29,7 +42,8 @@ Vagrant.configure("2") do |config|
     vb.memory = "8192"
     vb.cpus = 2
   end
-
+  
+  config.vm.boot_timeout = 150
   config.vm.hostname = "ubuntu-vm"
 
   config.vm.network "private_network", ip: "192.168.33.10"

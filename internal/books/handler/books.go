@@ -188,7 +188,7 @@ func (b *BookHandler) GetAllBooks(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"users": users})
+	c.JSON(http.StatusOK, gin.H{"books": users})
 }
 
 func (b *BookHandler) DeleteBook(c *gin.Context) {
