@@ -27,14 +27,14 @@ func (u *UserAuth) Login(c *gin.Context) {
 	var user models.User
 	var err error
 
-	if err = c.Bind(&auth); err != nil {
+	if err = c.ShouldBindJSON(&auth); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = u.authRepository.Login(&user, &auth, c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -53,7 +53,7 @@ func (u *UserAuth) Login(c *gin.Context) {
 	}
 
 	c.SetCookie("token", token, int(time.Now().Add(time.Hour*24).Unix()), "/", "localhost", false, true)
-	c.JSON(http.StatusOK, gin.H{"message": "User logged succesfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "User logged successfully"})
 }
 
 func (u *UserAuth) Logout(c *gin.Context) {

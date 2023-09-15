@@ -26,6 +26,12 @@ sudo pg_ctlcluster 12 booksdb start
 sudo -u postgres psql -p 5433 < /bookapi/init-scripts/users/postgres-init-users.sql
 sudo -u postgres psql -p 5434 < /bookapi/init-scripts/books/postgres-init-books.sql
 
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+apt  install golang-goprotobuf-dev
+
+cd /bookapi
+go mod tidy
 SCRIPT
 
 class VagrantPlugins::ProviderVirtualBox::Action::Network

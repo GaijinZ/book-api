@@ -2,7 +2,7 @@
 
 SOURCE_FILE="$HOME/.bash_profile"
 
-touch "$SOURCE_FILE"
+touch "$HOME/.bash_profile"
 
 echo "export GATEWAY_SERVER_PORT=8080" > "$SOURCE_FILE"
 echo "export USERS_SERVER_PORT=5000" >> "$SOURCE_FILE"
@@ -19,7 +19,7 @@ echo "export GOPATH=/usr/local/go" >> "$SOURCE_FILE"
 echo "export GOROOT=/usr/local/go" >> "$SOURCE_FILE"
 echo "export PATH=$PATH:/usr/local/go/bin" >> "$SOURCE_FILE"
 echo "export SECRET_KEY=mysecretkeyshh" >> "$SOURCE_FILE"
-echo "export POSTGRES_CONTAINER_IP=172.19.0.2" >> $SOURCE_FILE
+echo "export POSTGRES_CONTAINER_IP=172.19.0.2" >> "$SOURCE_FILE"
 echo "export NETWORK=library" >> "$SOURCE_FILE"
 echo "export GOPATH=$HOME/go" >> "$SOURCE_FILE"
 

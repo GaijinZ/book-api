@@ -1,13 +1,11 @@
 package server
 
 import (
+	"github.com/gin-gonic/gin"
 	"library/internal/users/handler"
 	"library/internal/users/postgres"
 	"library/internal/users/repository"
 	middleware "library/utils/middleware"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 func Run(port string) {
@@ -20,9 +18,6 @@ func Run(port string) {
 	handlerUser := handler.NewUserHandler(userRepository)
 
 	router := gin.Default()
-	router.GET("/health", func(c *gin.Context) {
-		c.String(http.StatusOK, "Microservice is healthy")
-	})
 
 	router.POST("/v1/users", handlerUser.AddUser)
 	router.POST("/v1/users/login", authUser.Login)

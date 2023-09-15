@@ -5,6 +5,7 @@ import (
 	"library/internal/users/models"
 	"library/internal/users/repository"
 	"library/utils"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -38,28 +39,11 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 	var user models.User
 	var err error
 
-	storedData, exists := c.Get("transformedData")
-	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Stored data not found"})
+	if err = c.ShouldBindJSON(&user); err != nil {
+		log.Printf("JSON binding error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	if dataMap, ok := storedData.(map[string]interface{}); ok {
-		user.Firstname = dataMap["first_name"].(string)
-		user.Lastname = dataMap["last_name"].(string)
-		user.Email = dataMap["email"].(string)
-		user.Password = dataMap["password"].(string)
-		user.Role = dataMap["role"].(string)
-	} else {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process stored data"})
-		return
-	}
-
-	// if err = c.ShouldBindJSON(&user); err != nil {
-	// 	log.Printf("JSON binding error: %v", err)
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
 
 	if err := validate.Struct(user); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})

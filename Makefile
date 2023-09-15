@@ -1,5 +1,11 @@
 include ${HOME}/.bash_profile
 
+pb:
+	mkdir grpc/pb/books
+	mkdir grpc/pb/users
+	protoc --proto_path=grpc/proto/books --go_out=grpc/pb/books/ --go_opt=paths=source_relative --go-grpc_out=grpc/pb/books/ --go-grpc_opt=paths=source_relative grpc/proto/books/book.proto
+	protoc --proto_path=grpc/proto/users --go_out=grpc/pb/users/ --go_opt=paths=source_relative --go-grpc_out=grpc/pb/users/ --go-grpc_opt=paths=source_relative grpc/proto/users/user.proto
+
 build_postgres:
 	docker build --no-cache -t postgres -f database/postgres/Dockerfile .
 
