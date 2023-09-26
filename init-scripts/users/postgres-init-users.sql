@@ -1,5 +1,5 @@
 CREATE USER tmosto WITH PASSWORD 'tmosto' CREATEDB LOGIN;
-CREATE DATABASE usersdb WITH OWNER = tmosto;
+CREATE DATABASE IF NOT EXISTS usersdb WITH OWNER = tmosto;
 
 \c usersdb
 

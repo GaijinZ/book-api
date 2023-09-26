@@ -1,3 +1,11 @@
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'usersdb') THEN
+        CREATE DATABASE usersdb WITH OWNER = tmosto;
+    END IF;
+END $$;
+
+\c booksdb
+
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   firstname VARCHAR(100) NOT NULL,
@@ -8,17 +16,4 @@ CREATE TABLE IF NOT EXISTS users (
   UNIQUE (email)
 );
 
-CREATE TABLE IF NOT EXISTS authors (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS books (
-  id SERIAL PRIMARY KEY,
-  book_name VARCHAR(100) NOT NULL,
-  date_published DATE,
-  isbn VARCHAR(20),
-  page_count INTEGER,
-  user_id INTEGER REFERENCES users (id) ON DELETE CASCADE,
-  author_id INTEGER REFERENCES authors (id)
-);
+ALTER TABLE users OWNER TO tmosto;

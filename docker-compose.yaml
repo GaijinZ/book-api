@@ -1,0 +1,79 @@
+version: '3'
+
+networks:
+  bookapi_library:
+    driver: bridge
+
+services:
+  user_postgres:
+    image: users-postgres:latest
+    restart: always
+    container_name: users_postgres
+    networks:
+      - bookapi_library
+    environment:
+      POSTGRES_USER: tmosto
+      POSTGRES_PASSWORD: tmosto
+      POSTGRES_DB: usersdb
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "usersdb", "-U", "tmosto" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  book_postgres:
+    image: books-postgres:latest
+    restart: always
+    container_name: books_postgres
+    networks:
+      - bookapi_library
+    environment:
+      POSTGRES_USER: tmosto
+      POSTGRES_PASSWORD: tmosto
+      POSTGRES_DB: booksdb
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "booksdb", "-U", "tmosto" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  users-api:
+    image: userapi-im:latest
+    container_name: users
+    depends_on:
+      user_postgres:
+        condition: service_healthy
+    networks:
+      - bookapi_library
+    environment:
+      - USERS_SERVER_PORT=5000
+      - POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres:5433/usersdb
+      - GOPATH=$HOME/go
+      - PATH=$PATH:/usr/local/go/bin
+      - SECRET_KEY=mysecretkeyshh
+    ports:
+      - "5000:5000"
+
+  books-api:
+    image: bookapi-im:latest
+    container_name: books
+    depends_on:
+      book_postgres:
+        condition: service_healthy
+    networks:
+      - bookapi_library
+    environment:
+      - BOOKS_SERVER_PORT=5001
+      - POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres:5434/booksdb
+      - GOPATH=$HOME/go
+      - PATH=$PATH:/usr/local/go/bin
+      - SECRET_KEY=mysecretkeyshh
+    ports:
+      - "5001:5001"
+
+volumes:
+  postgres-data:

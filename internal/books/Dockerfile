@@ -9,7 +9,6 @@ RUN go mod download
 
 COPY internal/books ./internal/books
 COPY cmd/books ./cmd/books
-COPY database/postgres ./database/postgres
 COPY internal/users/models ./internal/users/models
 COPY utils ./utils
 

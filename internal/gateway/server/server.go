@@ -5,24 +5,21 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 )
 
 func Run(port string) {
-	// Create a reverse proxy for the microservice (port 5000)
-	usersURL, _ := url.Parse("http://localhost:5000")
+	usersURL, _ := url.Parse("http://localhost" + ":" + os.Getenv("USERS_SERVER_PORT"))
 	usersProxy := httputil.NewSingleHostReverseProxy(usersURL)
 
-	// Create a reverse proxy for the microservice (port 5001)
-	booksURL, _ := url.Parse("http://localhost:5001")
+	booksURL, _ := url.Parse("http://localhost" + ":" + os.Getenv("BOOKS_SERVER_PORT"))
 	booksProxy := httputil.NewSingleHostReverseProxy(booksURL)
 
 	http.HandleFunc("/v1/users/", func(w http.ResponseWriter, r *http.Request) {
-		// Modify the request path to forward to the appropriate microservice
 		usersProxy.ServeHTTP(w, r)
 	})
 
 	http.HandleFunc("/v1/books/", func(w http.ResponseWriter, r *http.Request) {
-		// Modify the request path to forward to the appropriate microservice
 		booksProxy.ServeHTTP(w, r)
 	})
 
