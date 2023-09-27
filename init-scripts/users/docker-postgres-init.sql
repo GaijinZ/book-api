@@ -4,7 +4,7 @@ DO $$ BEGIN
     END IF;
 END $$;
 
-\c booksdb
+\c usersdb
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,

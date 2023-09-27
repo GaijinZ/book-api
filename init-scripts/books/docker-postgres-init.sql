@@ -21,5 +21,5 @@ CREATE TABLE IF NOT EXISTS book (
   author_id INTEGER REFERENCES authors (id)
 );
 
-ALTER TABLE author OWNER TO tmosto;
+ALTER TABLE authors OWNER TO tmosto;
 ALTER TABLE book OWNER TO tmosto;

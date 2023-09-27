@@ -1,16 +1,19 @@
 version: '3'
 
 networks:
-  bookapi_library:
+  library:
     driver: bridge
 
 services:
   user_postgres:
-    image: users-postgres:latest
+    image: users-postgres
     restart: always
+    build:
+      context: .
+      dockerfile: users/postgres/Dockerfile
     container_name: users_postgres
     networks:
-      - bookapi_library
+      - library
     environment:
       POSTGRES_USER: tmosto
       POSTGRES_PASSWORD: tmosto
@@ -24,11 +27,14 @@ services:
       retries: 3
 
   book_postgres:
-    image: books-postgres:latest
+    image: books-postgres
     restart: always
+    build:
+      context: .
+      dockerfile: books/postgres/Dockerfile
     container_name: books_postgres
     networks:
-      - bookapi_library
+      - library
     environment:
       POSTGRES_USER: tmosto
       POSTGRES_PASSWORD: tmosto
@@ -42,16 +48,19 @@ services:
       retries: 3
 
   users-api:
-    image: userapi-im:latest
+    image: userapi-im
     container_name: users
+    build:
+      context: .
+      dockerfile: users/cmd/Dockerfile
     depends_on:
       user_postgres:
         condition: service_healthy
     networks:
-      - bookapi_library
+      - library
     environment:
       - USERS_SERVER_PORT=5000
-      - POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres:5433/usersdb
+      - POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres/usersdb
       - GOPATH=$HOME/go
       - PATH=$PATH:/usr/local/go/bin
       - SECRET_KEY=mysecretkeyshh
@@ -59,16 +68,19 @@ services:
       - "5000:5000"
 
   books-api:
-    image: bookapi-im:latest
+    image: bookapi-im
     container_name: books
+    build:
+      context: .
+      dockerfile: ./books/cmd/Dockerfile
     depends_on:
       book_postgres:
         condition: service_healthy
     networks:
-      - bookapi_library
+      - library
     environment:
       - BOOKS_SERVER_PORT=5001
-      - POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres:5434/booksdb
+      - POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres/booksdb
       - GOPATH=$HOME/go
       - PATH=$PATH:/usr/local/go/bin
       - SECRET_KEY=mysecretkeyshh

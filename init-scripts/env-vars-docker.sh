@@ -3,7 +3,7 @@
 GATEWAY_SERVER_PORT=8080
 BOOKS_SERVER_PORT=5001
 USERS_SERVER_PORT=5000
-POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres:5433/usersdb
+POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres:5432/usersdb
 POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres:5434/booksdb
 POSTGRES_USER=tmosto
 POSTGRES_PASSWORD=tmosto
