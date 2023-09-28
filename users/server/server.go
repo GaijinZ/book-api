@@ -23,15 +23,12 @@ func Run(port string) {
 	router.POST("/v1/users/login", authUser.Login)
 	router.POST("/v1/users/logout", authUser.Logout)
 
-	v1 := router.Group("/v1")
-	v1.Use(middleware.IsAuthorized())
+	v1 := router.Group("/v1/users")
 
-	users := v1.Group("/users")
-
-	users.PUT("/:user_id", handlerUser.UpdateUser)
-	users.GET("/:user_id", handlerUser.GetUser)
-	users.GET("", handlerUser.GetAllUsers)
-	users.DELETE("/:user_id/:delete_id", handlerUser.DeleteUser)
+	v1.PUT("/:user_id", middleware.IsAuthorized, handlerUser.UpdateUser)
+	v1.GET("/:user_id", middleware.IsAuthorized, handlerUser.GetUser)
+	v1.GET("", middleware.IsAuthorized, handlerUser.GetAllUsers)
+	v1.DELETE("/:user_id/:delete_id", middleware.IsAuthorized, handlerUser.DeleteUser)
 
 	router.Run(port)
 }
