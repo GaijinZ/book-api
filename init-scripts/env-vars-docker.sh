@@ -3,8 +3,10 @@
 GATEWAY_SERVER_PORT=8080
 BOOKS_SERVER_PORT=5001
 USERS_SERVER_PORT=5000
+SHOPS_SERVER_PORT=5002
 POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres:5432/usersdb
 POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres:5434/booksdb
+POSTGRES_SHOPS=postgres://tmosto:tmosto@books_postgres:5435/shopsdb
 POSTGRES_USER=tmosto
 POSTGRES_PASSWORD=tmosto
 POSTGRES_USERS_DB=usersdb

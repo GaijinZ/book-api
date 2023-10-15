@@ -78,7 +78,7 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.AddBook(userID, book, c)
+	err = b.bookRepository.AddBook(userID, book)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -153,7 +153,7 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.UpdateBook(bookID, book, c)
+	err = b.bookRepository.UpdateBook(bookID, book)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -172,7 +172,7 @@ func (b *BookHandler) GetBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.GetBook(bookID, &book, c)
+	err = b.bookRepository.GetBook(bookID, &book)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -182,7 +182,7 @@ func (b *BookHandler) GetBook(c *gin.Context) {
 }
 
 func (b *BookHandler) GetAllBooks(c *gin.Context) {
-	users, err := b.bookRepository.GetAllBooks(c)
+	users, err := b.bookRepository.GetAllBooks()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -243,7 +243,7 @@ func (b *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.DeleteBook(bookID, c)
+	err = b.bookRepository.DeleteBook(bookID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

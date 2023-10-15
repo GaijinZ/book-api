@@ -6,7 +6,6 @@ import (
 	"library/books/models"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -37,7 +36,7 @@ func (b *BookRepository) GetOrCreateAuthor(authorName string) (models.Author, er
 	return author, nil
 }
 
-func (b *BookRepository) AddBook(userID int, book models.Book, c *gin.Context) error {
+func (b *BookRepository) AddBook(userID int, book models.Book) error {
 	author, err := b.GetOrCreateAuthor(book.Author.Name)
 	if err != nil {
 		errorMessage := "Author error: " + err.Error()
@@ -54,7 +53,7 @@ func (b *BookRepository) AddBook(userID int, book models.Book, c *gin.Context) e
 	return nil
 }
 
-func (b *BookRepository) UpdateBook(bookID int, book models.Book, c *gin.Context) error {
+func (b *BookRepository) UpdateBook(bookID int, book models.Book) error {
 	author, err := b.GetOrCreateAuthor(book.Author.Name)
 	if err != nil {
 		errorMessage := "Author error: " + err.Error()
@@ -80,7 +79,7 @@ func (b *BookRepository) UpdateBook(bookID int, book models.Book, c *gin.Context
 	return nil
 }
 
-func (b *BookRepository) GetBook(bookID int, book *models.Book, c *gin.Context) error {
+func (b *BookRepository) GetBook(bookID int, book *models.Book) error {
 	var date time.Time
 
 	getQuery := `
@@ -103,7 +102,7 @@ func (b *BookRepository) GetBook(bookID int, book *models.Book, c *gin.Context) 
 	return nil
 }
 
-func (b *BookRepository) GetAllBooks(c *gin.Context) ([]models.Book, error) {
+func (b *BookRepository) GetAllBooks() ([]models.Book, error) {
 	var books []models.Book
 	var date time.Time
 
@@ -141,7 +140,7 @@ func (b *BookRepository) GetAllBooks(c *gin.Context) ([]models.Book, error) {
 	return books, nil
 }
 
-func (b *BookRepository) DeleteBook(id int, c *gin.Context) error {
+func (b *BookRepository) DeleteBook(id int) error {
 	query := "DELETE FROM book WHERE id=$1"
 	_, err := b.DBPool.Exec(context.Background(), query, id)
 	if err != nil {

@@ -16,15 +16,19 @@ sudo apt install make
 
 mkdir ~/usersdb_data
 mkdir ~/booksdb_data
+mkdir ~/shops_books_db_data
 
 sudo pg_createcluster --datadir=~/usersdb_data 12 usersdb
 sudo pg_createcluster --datadir=~/booksdb_data 12 booksdb
+sudo pg_createcluster --datadir=~/shops_books_db_data  12 shops_books_db_data
 
 sudo pg_ctlcluster 12 usersdb start
 sudo pg_ctlcluster 12 booksdb start
+sudo pg_ctlcluster 12 shops_books_db_data  start
 
 sudo -u postgres psql -p 5433 < /bookapi/init-scripts/users/postgres-init-users.sql
 sudo -u postgres psql -p 5434 < /bookapi/init-scripts/books/postgres-init-books.sql
+sudo -u postgres psql -p 5435 < /bookapi/init-scripts/shops/postgres-init.sql
 
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
