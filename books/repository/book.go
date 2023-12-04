@@ -45,7 +45,7 @@ func (b *BookRepository) AddBook(userID int, book models.Book) error {
 
 	book.Author.ID = author.ID
 
-	_, err = b.DBPool.Exec(context.Background(), "INSERT INTO book (name, date_published, isbn, page_count, user_id, author_id) VALUES ($1, $2, $3, $4, $5, $6)",
+	_, err = b.DBPool.Exec(context.Background(), "INSERT INTO user_book (name, date_published, isbn, page_count, user_id, author_id) VALUES ($1, $2, $3, $4, $5, $6)",
 		book.Name, book.DatePublished, book.ISBN, book.PageCount, userID, author.ID)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (b *BookRepository) UpdateBook(bookID int, book models.Book) error {
 
 	book.Author.ID = author.ID
 
-	updateQuery := "UPDATE book SET name=$1, date_published=$2, isbn=$3, page_count=$4, author_id=$5 WHERE id=$6"
+	updateQuery := "UPDATE user_book SET name=$1, date_published=$2, isbn=$3, page_count=$4, author_id=$5 WHERE id=$6"
 	result, err := b.DBPool.Exec(context.Background(), updateQuery, book.Name, book.DatePublished, book.ISBN, book.PageCount, book.Author.ID, bookID)
 	if err != nil {
 		errorMessage := "Author error: " + err.Error()
@@ -84,7 +84,7 @@ func (b *BookRepository) GetBook(bookID int, book *models.Book) error {
 
 	getQuery := `
 	SELECT b.name, b.date_published, b.isbn, b.page_count, a.name
-	FROM book AS b
+	FROM user_book AS b
 	JOIN author AS a ON b.author_id = a.id
 	WHERE b.id = $1
 `
@@ -108,7 +108,7 @@ func (b *BookRepository) GetAllBooks() ([]models.Book, error) {
 
 	getAllQuery := `
 	SELECT b.name, b.date_published, b.isbn, b.page_count, a.name
-	FROM book AS b
+	FROM user_book AS b
 	JOIN author AS a ON b.author_id = a.id
 	ORDER BY a.id
 	`
@@ -141,7 +141,7 @@ func (b *BookRepository) GetAllBooks() ([]models.Book, error) {
 }
 
 func (b *BookRepository) DeleteBook(id int) error {
-	query := "DELETE FROM book WHERE id=$1"
+	query := "DELETE FROM user_book WHERE id=$1"
 	_, err := b.DBPool.Exec(context.Background(), query, id)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Book delete error ID %d: %s", id, err.Error())
@@ -152,7 +152,7 @@ func (b *BookRepository) DeleteBook(id int) error {
 }
 
 func IsAssigned(bookID, userID int, db *pgxpool.Pool) (bool, error) {
-	query := "SELECT EXISTS (SELECT 1 FROM book WHERE id = $1 AND user_id = $2)"
+	query := "SELECT EXISTS (SELECT 1 FROM user_book WHERE id = $1 AND user_id = $2)"
 
 	var exists bool
 	err := db.QueryRow(context.Background(), query, bookID, userID).Scan(&exists)
@@ -164,7 +164,7 @@ func IsAssigned(bookID, userID int, db *pgxpool.Pool) (bool, error) {
 }
 
 func ValidateISBNExists(isbn string, db *pgxpool.Pool) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM book WHERE isbn = $1)"
+	query := "SELECT EXISTS(SELECT 1 FROM user_book WHERE isbn = $1)"
 
 	var exists bool
 	err := db.QueryRow(context.Background(), query, isbn).Scan(&exists)

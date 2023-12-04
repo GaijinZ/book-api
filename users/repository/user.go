@@ -6,7 +6,6 @@ import (
 	"library/pkg"
 	"library/users/models"
 
-	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,7 +19,7 @@ func NewUserRepository(dbPool *pgxpool.Pool) *UserRepository {
 	}
 }
 
-func (r *UserRepository) AddUser(user *models.User, c *gin.Context) error {
+func (r *UserRepository) AddUser(user *models.User) error {
 	exists, err := checkUserEmailExist(user.Email, r.DBPool)
 	if err != nil {
 		errorMessage := "Checking user email error: " + err.Error()
@@ -49,7 +48,7 @@ func (r *UserRepository) AddUser(user *models.User, c *gin.Context) error {
 	return nil
 }
 
-func (r *UserRepository) UpdateUser(id int, user *models.User, c *gin.Context) error {
+func (r *UserRepository) UpdateUser(id int, user *models.User) error {
 	updateQuery := "UPDATE users SET firstname=$1, lastname=$2, email=$3, role=$4 WHERE id=$5"
 	result, err := r.DBPool.Exec(context.Background(), updateQuery, user.Firstname, user.Lastname, user.Email, user.Role, id)
 	if err != nil {
@@ -67,7 +66,7 @@ func (r *UserRepository) UpdateUser(id int, user *models.User, c *gin.Context) e
 	return nil
 }
 
-func (r *UserRepository) GetUser(id int, user *models.User, c *gin.Context) error {
+func (r *UserRepository) GetUser(id int, user *models.User) error {
 	getQuery := "SELECT firstname, lastname, email, role FROM users WHERE id=$1"
 	err := r.DBPool.QueryRow(context.Background(), getQuery, id).Scan(&user.Firstname, &user.Lastname, &user.Email, &user.Role)
 	if err != nil {
@@ -78,7 +77,7 @@ func (r *UserRepository) GetUser(id int, user *models.User, c *gin.Context) erro
 	return nil
 }
 
-func (r *UserRepository) GetAllUsers(c *gin.Context) ([]models.User, error) {
+func (r *UserRepository) GetAllUsers() ([]models.User, error) {
 	var users []models.User
 
 	getAllQuery := "SELECT firstname, lastname, email, role FROM users ORDER BY id"
@@ -109,7 +108,7 @@ func (r *UserRepository) GetAllUsers(c *gin.Context) ([]models.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) DeleteUser(id int, c *gin.Context) error {
+func (r *UserRepository) DeleteUser(id int) error {
 	exists, err := pkg.CheckIDExists("users", id, r.DBPool)
 	if err != nil {
 		errorMessage := "Checking user ID error: " + err.Error()

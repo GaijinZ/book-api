@@ -1,4 +1,4 @@
-package downloads_api
+package service
 
 import (
 	"encoding/json"

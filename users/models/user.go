@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 )
@@ -12,6 +13,15 @@ type User struct {
 	Email     string `json:"email,omitempty" form:"email" validate:"required,email"`
 	Password  string `json:"password,omitempty" form:"password"`
 	Role      string `json:"role,omitempty" form:"role"`
+}
+
+type UserResponse struct {
+	ID        int             `json:"id,omitempty" form:"id"`
+	Firstname string          `json:"first_name,omitempty" form:"firstname"`
+	Lastname  string          `json:"last_name,omitempty" form:"lastname"`
+	Email     string          `json:"email,omitempty" form:"email" validate:"required,email"`
+	BookList  json.RawMessage `json:"book_list"`
+	Role      string          `json:"role,omitempty" form:"role"`
 }
 
 type Authentication struct {

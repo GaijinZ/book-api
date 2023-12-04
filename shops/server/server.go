@@ -2,13 +2,13 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	"library/pkg/postgres"
 	"library/shops/handler"
-	"library/shops/postgres"
 	"library/shops/repository"
 )
 
 func Run(port string) {
-	dbPool := postgres.GetPostgresConnectionString()
+	dbPool := postgres.GetConnection()
 	defer dbPool.Close()
 
 	shopRepository := repository.NewShopRepository(dbPool)
@@ -16,9 +16,9 @@ func Run(port string) {
 
 	router := gin.Default()
 
-	v1 := router.Group("/v1")
+	v1 := router.Group("/v1/shops")
 
-	v1.POST("/shop-list", shopHandler.LoadBooks)
+	v1.POST("/load-books", shopHandler.LoadBooks)
 
 	router.Run(port)
 }

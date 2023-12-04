@@ -62,7 +62,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 		return
 	}
 
-	err = h.userRepository.AddUser(&user, c)
+	err = h.userRepository.AddUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -97,7 +97,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	err = h.userRepository.UpdateUser(userID, &user, c)
+	err = h.userRepository.UpdateUser(userID, &user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -127,7 +127,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	err = h.userRepository.GetUser(userID, &user, c)
+	err = h.userRepository.GetUser(userID, &user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -136,7 +136,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
-	users, err := h.userRepository.GetAllUsers(c)
+	users, err := h.userRepository.GetAllUsers()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -171,7 +171,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	err = h.userRepository.DeleteUser(deleteUser, c)
+	err = h.userRepository.DeleteUser(deleteUser)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

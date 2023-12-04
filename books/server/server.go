@@ -3,13 +3,13 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"library/books/handler"
-	"library/books/postgres"
 	"library/books/repository"
 	middleware "library/pkg/middleware"
+	"library/pkg/postgres"
 )
 
 func Run(port string) {
-	dbPool := postgres.GetPostgresConnectionString()
+	dbPool := postgres.GetConnection()
 	defer dbPool.Close()
 
 	bookRepository := repository.NewBookRepository(dbPool)

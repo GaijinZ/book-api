@@ -17,9 +17,9 @@ services:
     environment:
       POSTGRES_USER: tmosto
       POSTGRES_PASSWORD: tmosto
-      POSTGRES_DB: usersdb
+      POSTGRES_DB: booksdb
     ports:
-      - "5433:5432"
+      - "5432:5432"
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "usersdb", "-U", "tmosto" ]
       interval: 10s
@@ -40,7 +40,7 @@ services:
       POSTGRES_PASSWORD: tmosto
       POSTGRES_DB: booksdb
     ports:
-      - "5434:5432"
+      - "5432:5432"
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "booksdb", "-U", "tmosto" ]
       interval: 10s
@@ -60,7 +60,7 @@ services:
       - library
     environment:
       - USERS_SERVER_PORT=5000
-      - POSTGRES_USERS=postgres://tmosto:tmosto@users_postgres/usersdb
+      - POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres/booksdb
       - GOPATH=$HOME/go
       - PATH=$PATH:/usr/local/go/bin
       - SECRET_KEY=mysecretkeyshh

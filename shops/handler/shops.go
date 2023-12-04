@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"library/shops/downloads_api"
 	"library/shops/repository"
+	"net/http"
 )
 
 type ShopHandler struct {
@@ -18,17 +18,15 @@ func NewShopHandler(shopRepository *repository.ShopRepository) *ShopHandler {
 }
 
 func (s *ShopHandler) LoadBooks(c *gin.Context) {
-	booksResponse, err := downloads_api.GetBooks("Hobbit")
+	err := s.shopRepository.LoadBooks()
 	if err != nil {
-		fmt.Println("Error fetching books:", err)
-		return
-	}
-
-	err = s.shopRepository.LoadBooks(booksResponse)
-	if err != nil {
+		errorMessage := "Count not fetch books: " + err.Error()
+		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
 	fmt.Println("Available shops:")
 	fmt.Println("Hobbit")
+	fmt.Println("War")
+	fmt.Println("Lego")
 }
