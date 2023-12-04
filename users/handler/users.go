@@ -33,8 +33,10 @@ func NewUserHandler(userRepository *repository.UserRepository) *UserHandler {
 	}
 }
 
+// TODO: don't make global variables
 var validate = validator.New()
 
+// TODO: add more discriptions to error message
 func (h *UserHandler) AddUser(c *gin.Context) {
 	var user models.User
 	var err error
@@ -71,6 +73,7 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User added successfully"})
 }
 
+// TODO: move authentification/authorization to middleware
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 
