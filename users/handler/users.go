@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"library/pkg"
 	"library/users/models"
@@ -12,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	middleware "library/pkg/middleware"
+	"library/pkg/middleware"
 )
 
 type Userer interface {
@@ -24,18 +25,19 @@ type Userer interface {
 }
 
 type UserHandler struct {
-	userRepository *repository.UserRepository
+	ctx            context.Context
+	userRepository repository.UsererRepository
 }
 
-func NewUserHandler(userRepository *repository.UserRepository) *UserHandler {
+func NewUserHandler(ctx context.Context, userRepository repository.UsererRepository) Userer {
 	return &UserHandler{
+		ctx:            ctx,
 		userRepository: userRepository,
 	}
 }
 
-var validate = validator.New()
-
 func (h *UserHandler) AddUser(c *gin.Context) {
+	var validate = validator.New()
 	var user models.User
 	var err error
 
@@ -74,30 +76,14 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 
-	token, err := c.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, err := middleware.VerifyJWT(token)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	userID, err := strconv.Atoi(claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	userID := c.GetInt("userID")
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = h.userRepository.UpdateUser(userID, &user)
+	err := h.userRepository.UpdateUser(userID, &user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -109,25 +95,9 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 func (h *UserHandler) GetUser(c *gin.Context) {
 	var user models.User
 
-	token, err := c.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	userID := c.GetInt("userID")
 
-	claims, err := middleware.VerifyJWT(token)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	userID, err := strconv.Atoi(claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	err = h.userRepository.GetUser(userID, &user)
+	err := h.userRepository.GetUser(userID, &user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

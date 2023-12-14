@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"library/transactions/models"
 	"library/transactions/repository"
@@ -8,30 +9,27 @@ import (
 	"strconv"
 )
 
-type Transaction interface {
+type TransactionerHandler interface {
 	BuyBook(*gin.Context)
 	TransactionHistory(*gin.Context)
 }
 
 type TransactionHandler struct {
-	transactionRepository *repository.TransactionRepository
+	ctx                   context.Context
+	transactionRepository repository.TransactionerRepository
 }
 
-//func NewTransactionHandler(transactionHandler *repository.TransactionRepository) *TransactionHandler {
-//	return &TransactionHandler{
-//		transactionRepository: transactionHandler,
-//	}
-//}
-
-func NewTransactionHandler(transactionHandler *repository.TransactionRepository) Transaction {
-	tr := TransactionHandler{}
-	tr.transactionRepository = transactionHandler
-
-	return &tr
+func NewTransactionHandler(ctx context.Context, transactionHandler repository.TransactionerRepository) TransactionerHandler {
+	return &TransactionHandler{
+		ctx:                   ctx,
+		transactionRepository: transactionHandler,
+	}
 }
 
 func (t *TransactionHandler) BuyBook(c *gin.Context) {
 	transaction := models.TransactionResponse{}
+
+	userID := c.GetInt("userID")
 
 	bookID, err := strconv.Atoi(c.Param("book_id"))
 	if err != nil {
@@ -45,25 +43,7 @@ func (t *TransactionHandler) BuyBook(c *gin.Context) {
 		return
 	}
 
-	//token, err := c.Cookie("token")
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
-	//
-	//claims, err := middleware.VerifyJWT(token)
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	//	return
-	//}
-	//
-	//userID, err := strconv.Atoi(claims.UserID)
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//	return
-	//}
-
-	if err = t.transactionRepository.BuyBook(1, bookID, transaction.Quantity); err != nil {
+	if err = t.transactionRepository.BuyBook(userID, bookID, transaction.Quantity); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -72,25 +52,9 @@ func (t *TransactionHandler) BuyBook(c *gin.Context) {
 }
 
 func (t *TransactionHandler) TransactionHistory(c *gin.Context) {
-	//token, err := c.Cookie("token")
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
-	//
-	//claims, err := middleware.VerifyJWT(token)
-	//if err != nil {
-	//	c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-	//	return
-	//}
-	//
-	//userID, err := strconv.Atoi(claims.UserID)
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//	return
-	//}
+	userID := c.GetInt("userID")
 
-	transactions, err := t.transactionRepository.TransactionHistory(1)
+	transactions, err := t.transactionRepository.TransactionHistory(userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

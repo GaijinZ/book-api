@@ -1,22 +1,22 @@
 package pkg
 
 import (
-	"fmt"
 	"library/books/models"
+	"library/pkg/logger"
 	"time"
 )
 
-func CheckDate(book *models.Book) error {
+func CheckDate(log logger.Logger, book *models.Book) error {
 	datePublished, err := time.Parse(time.DateOnly, book.DatePublished)
 	if err != nil {
-		errorMessage := "Failed to parse date: " + err.Error()
-		return fmt.Errorf(errorMessage)
+		log.Errorf("Failed to parse date: ", err)
+		return err
 	}
 
 	today := time.Now().Local().Truncate(24 * time.Hour)
 	if datePublished.After(today) {
-		errorMessage := "date cannot be future date"
-		return fmt.Errorf(errorMessage)
+		log.Errorf("Date cannot be future date")
+		return err
 	}
 
 	book.DatePublished = datePublished.Format(time.DateOnly)

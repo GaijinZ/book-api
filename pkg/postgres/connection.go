@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kelseyhightower/envconfig"
+	"library/pkg/config"
+	"library/pkg/logger"
 	"log"
 	"os"
 )
@@ -11,21 +13,26 @@ import (
 var dbPool *pgxpool.Pool
 
 func getPostgresConnectionString() {
+	var cfg config.GlobalEnv
 	var err error
 
-	pgxAddress := os.Getenv("POSTGRES_BOOKS")
+	if err := envconfig.Process("bookapi", &cfg); err != nil {
+		log.Fatal(err.Error())
+	}
 
-	dbPool, err = pgxpool.New(context.Background(), pgxAddress)
+	log := logger.NewLogger()
+
+	dbPool, err = pgxpool.New(context.Background(), cfg.PostgresBooks)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		log.Errorf("Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
 
 	if err = dbPool.Ping(context.Background()); err != nil {
-		log.Println(err)
+		log.Errorf("Ping failed: %v", err)
 	}
 
-	log.Println("Connected!")
+	log.Infof("Postgres connected!")
 }
 
 func GetConnection() *pgxpool.Pool {

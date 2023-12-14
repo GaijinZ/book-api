@@ -1,21 +1,23 @@
 package server
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
-	middleware "library/pkg/middleware"
+	"library/pkg/middleware"
 	"library/pkg/postgres"
+	"library/pkg/tracing"
 	"library/users/handler"
 	repository2 "library/users/repository"
 )
 
-func Run(port string) {
+func Run(ctx context.Context, port string) {
 	dbPool := postgres.GetConnection()
 	defer dbPool.Close()
 
-	userRepository := repository2.NewUserRepository(dbPool)
-	authRepository := repository2.NewAuthRepository(dbPool)
-	authUser := handler.NewUserAuth(authRepository)
-	handlerUser := handler.NewUserHandler(userRepository)
+	userRepository := repository2.NewUserRepository(ctx, dbPool)
+	authRepository := repository2.NewAuthRepository(ctx, dbPool)
+	authUser := handler.NewUserAuth(ctx, authRepository)
+	handlerUser := handler.NewUserHandler(ctx, userRepository)
 
 	router := gin.Default()
 
@@ -25,10 +27,30 @@ func Run(port string) {
 
 	v1 := router.Group("/v1/users")
 
-	v1.PUT("/:user_id", middleware.IsAuthorized, handlerUser.UpdateUser)
-	v1.GET("/:user_id", middleware.IsAuthorized, handlerUser.GetUser)
-	v1.GET("", middleware.IsAuthorized, handlerUser.GetAllUsers)
-	v1.DELETE("/:user_id/:delete_id", middleware.IsAuthorized, handlerUser.DeleteUser)
+	v1.PUT("/:user_id",
+		tracing.TraceMiddleware,
+		middleware.IsAuthorized,
+		middleware.GetToken,
+		handlerUser.UpdateUser,
+	)
+	v1.GET("/:user_id",
+		tracing.TraceMiddleware,
+		middleware.IsAuthorized,
+		middleware.GetToken,
+		handlerUser.GetUser,
+	)
+	v1.GET("",
+		tracing.TraceMiddleware,
+		middleware.IsAuthorized,
+		middleware.GetToken,
+		handlerUser.GetAllUsers,
+	)
+	v1.DELETE("/:user_id/:delete_id",
+		tracing.TraceMiddleware,
+		middleware.IsAuthorized,
+		middleware.GetToken,
+		handlerUser.DeleteUser,
+	)
 
 	router.Run(port)
 }

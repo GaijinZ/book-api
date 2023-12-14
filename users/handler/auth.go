@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"library/pkg"
-	middleware "library/pkg/middleware"
+	"library/pkg/middleware"
 	"library/users/models"
 	"library/users/repository"
 	"net/http"
@@ -12,12 +13,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserAuth struct {
-	authRepository *repository.AuthRepository
+type UserAuther interface {
+	Login(c *gin.Context)
+	Logout(c *gin.Context)
 }
 
-func NewUserAuth(authRepository *repository.AuthRepository) *UserAuth {
+type UserAuth struct {
+	ctx            context.Context
+	authRepository repository.AutherRepository
+}
+
+func NewUserAuth(ctx context.Context, authRepository repository.AutherRepository) UserAuther {
 	return &UserAuth{
+		ctx:            ctx,
 		authRepository: authRepository,
 	}
 }
@@ -32,7 +40,7 @@ func (u *UserAuth) Login(c *gin.Context) {
 		return
 	}
 
-	err = u.authRepository.Login(&user, &auth, c)
+	err = u.authRepository.Login(&user, &auth)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

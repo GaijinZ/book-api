@@ -1,23 +1,31 @@
 package handler
 
 import (
-	"fmt"
+	"context"
 	"github.com/gin-gonic/gin"
+	"library/pkg/logger"
 	"library/shops/repository"
 	"net/http"
 )
 
-type ShopHandler struct {
-	shopRepository *repository.ShopRepository
+type ShopperHandler interface {
+	LoadBooks(c *gin.Context)
 }
 
-func NewShopHandler(shopRepository *repository.ShopRepository) *ShopHandler {
+type ShopHandler struct {
+	ctx            context.Context
+	shopRepository repository.ShopperRepository
+}
+
+func NewShopHandler(ctx context.Context, shopperRepository repository.ShopperRepository) ShopperHandler {
 	return &ShopHandler{
-		shopRepository: shopRepository,
+		ctx:            ctx,
+		shopRepository: shopperRepository,
 	}
 }
 
 func (s *ShopHandler) LoadBooks(c *gin.Context) {
+	log := s.ctx.Value("logger").(logger.Logger)
 	err := s.shopRepository.LoadBooks()
 	if err != nil {
 		errorMessage := "Count not fetch books: " + err.Error()
@@ -25,8 +33,8 @@ func (s *ShopHandler) LoadBooks(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("Available shops:")
-	fmt.Println("Hobbit")
-	fmt.Println("War")
-	fmt.Println("Lego")
+	log.Infof("Available shops:")
+	log.Infof("Hobbit")
+	log.Infof("War")
+	log.Infof("Lego")
 }

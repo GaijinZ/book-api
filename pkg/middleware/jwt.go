@@ -1,4 +1,4 @@
-package utils
+package middleware
 
 import (
 	models2 "library/users/models"
