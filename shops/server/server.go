@@ -1,18 +1,19 @@
 package server
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"library/pkg/postgres"
 	"library/shops/handler"
 	"library/shops/repository"
 )
 
-func Run(port string) {
+func Run(ctx *context.Context, port string) {
 	dbPool := postgres.GetConnection()
 	defer dbPool.Close()
 
-	shopRepository := repository.NewShopRepository(dbPool)
-	shopHandler := handler.NewShopHandler(shopRepository)
+	shopRepository := repository.NewShopRepository(*ctx, dbPool)
+	shopHandler := handler.NewShopHandler(*ctx, shopRepository)
 
 	router := gin.Default()
 

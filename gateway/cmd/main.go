@@ -1,10 +1,41 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"github.com/kelseyhightower/envconfig"
 	"library/gateway/server"
+	"library/pkg/config"
+	"library/pkg/logger"
+	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	gateway.Run(":" + os.Getenv("GATEWAY_SERVER_PORT"))
+	var cfg config.GlobalEnv
+	var ctx context.Context
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx = context.WithValue(ctx, "logger", logger.NewLogger())
+
+	if err := envconfig.Process("bookapi", &cfg); err != nil {
+		log.Fatal(err.Error())
+	}
+
+	go gateway.Run(ctx, cfg, ":"+cfg.GatewayServerPort)
+
+	for {
+		select {
+		case sig := <-interrupt:
+			fmt.Printf("Received signal: %v\n", sig)
+		case <-ctx.Done():
+			fmt.Println("Context done")
+		}
+	}
 }

@@ -1,18 +1,19 @@
 package handler
 
 import (
+	"context"
 	"library/books/models"
 	"library/books/repository"
 	"library/pkg"
+	"library/pkg/logger"
+	"library/pkg/postgres"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-
-	middleware "library/pkg/middleware"
 )
 
-type Booker interface {
+type BookerHandler interface {
 	AddBook(c *gin.Context)
 	UpdateBook(c *gin.Context)
 	GetBook(c *gin.Context)
@@ -21,45 +22,30 @@ type Booker interface {
 }
 
 type BookHandler struct {
-	bookRepository *repository.BookRepository
+	ctx            context.Context
+	bookRepository repository.BookerRepository
 }
 
-func NewBookHandler(bookRepository *repository.BookRepository) *BookHandler {
+func NewBookHandler(ctx context.Context, booker repository.BookerRepository) BookerHandler {
 	return &BookHandler{
-		bookRepository: bookRepository,
+		ctx:            ctx,
+		bookRepository: booker,
 	}
 }
 
 func (b *BookHandler) AddBook(c *gin.Context) {
 	var book models.Book
 	var err error
+	log := b.ctx.Value("logger").(logger.Logger)
 
-	token, err := c.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, err := middleware.VerifyJWT(token)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	userID, err := strconv.Atoi(claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	book.UserID.ID = userID
+	book.UserID.ID = c.GetInt("userID")
 
 	if err = c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	isExisting, err := repository.ValidateISBNExists(book.ISBN, b.bookRepository.DBPool)
+	isExisting, err := repository.ValidateISBNExists(log, book.ISBN, b.bookRepository.GetDBPool())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -71,14 +57,14 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 		return
 	}
 
-	err = pkg.CheckDate(&book)
+	err = pkg.CheckDate(log, &book)
 	if err != nil {
 		errorMessage := "Cannot add a book with a future publication date"
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 		return
 	}
 
-	err = b.bookRepository.AddBook(userID, book)
+	err = b.bookRepository.AddBook(book.UserID.ID, book)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -89,6 +75,7 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 
 func (b *BookHandler) UpdateBook(c *gin.Context) {
 	var book models.Book
+	log := b.ctx.Value("logger").(logger.Logger)
 
 	bookID, err := strconv.Atoi(c.Param("book_id"))
 	if err != nil {
@@ -102,7 +89,7 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	exists, err := pkg.CheckIDExists("books", bookID, b.bookRepository.DBPool)
+	exists, err := postgres.CheckIDExists("books", bookID, b.bookRepository.GetDBPool())
 	if err != nil {
 		errorMessage := "Checking book ID error: " + string(rune(bookID))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
@@ -115,25 +102,9 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	token, err := c.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	book.UserID.ID = c.GetInt("userID")
 
-	claims, err := middleware.VerifyJWT(token)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	userID, err := strconv.Atoi(claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	isAssigned, err := repository.IsAssigned(bookID, userID, b.bookRepository.DBPool)
+	isAssigned, err := repository.IsAssigned(log, bookID, book.UserID.ID, b.bookRepository.GetDBPool())
 	if err != nil {
 		errorMessage := "Error checking book assignment"
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
@@ -146,7 +117,7 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	err = pkg.CheckDate(&book)
+	err = pkg.CheckDate(log, &book)
 	if err != nil {
 		errorMessage := "Cannot add a book with a future publication date"
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
@@ -192,6 +163,8 @@ func (b *BookHandler) GetAllBooks(c *gin.Context) {
 }
 
 func (b *BookHandler) DeleteBook(c *gin.Context) {
+	log := b.ctx.Value("logger").(logger.Logger)
+
 	bookID, err := strconv.Atoi(c.Param("book_id"))
 	if err != nil {
 		errorMessage := "Wrong user ID: " + err.Error()
@@ -199,7 +172,7 @@ func (b *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	exists, err := pkg.CheckIDExists("books", bookID, b.bookRepository.DBPool)
+	exists, err := postgres.CheckIDExists("books", bookID, b.bookRepository.GetDBPool())
 	if err != nil {
 		errorMessage := "Checking book ID error: " + string(rune(bookID))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
@@ -212,25 +185,9 @@ func (b *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	token, err := c.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	userID := c.GetInt("userID")
 
-	claims, err := middleware.VerifyJWT(token)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	userID, err := strconv.Atoi(claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	isAssigned, err := repository.IsAssigned(bookID, userID, b.bookRepository.DBPool)
+	isAssigned, err := repository.IsAssigned(log, bookID, userID, b.bookRepository.GetDBPool())
 	if err != nil {
 		errorMessage := "Error checking book assignment"
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})

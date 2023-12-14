@@ -1,45 +1,60 @@
 package gateway
 
 import (
-	"log"
+	"context"
+	"library/pkg/config"
+	"library/pkg/logger"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 )
 
-func Run(port string) {
-	usersURL, _ := url.Parse("http://localhost" + ":" + os.Getenv("USERS_SERVER_PORT"))
+func Run(ctx context.Context, cfg config.GlobalEnv, port string) {
+	log := ctx.Value("logger").(logger.Logger)
+
+	usersURL, err := url.Parse("http://localhost/v1" + ":" + cfg.UsersServerPort)
+	if err != nil {
+		log.Errorf("Failed to parse user server: %d", err)
+	}
 	usersProxy := httputil.NewSingleHostReverseProxy(usersURL)
 
-	booksURL, _ := url.Parse("http://localhost" + ":" + os.Getenv("BOOKS_SERVER_PORT"))
+	booksURL, err := url.Parse("http://localhost/v1" + ":" + cfg.BooksServerPort)
+	if err != nil {
+		log.Errorf("Failed to parse book server: %d", err)
+	}
 	booksProxy := httputil.NewSingleHostReverseProxy(booksURL)
 
-	shopsURL, _ := url.Parse("http://localhost" + ":" + os.Getenv("SHOPS_SERVER_PORT"))
+	shopsURL, err := url.Parse("http://localhost/v1" + ":" + cfg.ShopsServerPort)
+	if err != nil {
+		log.Errorf("Failed to parse shops server: %d", err)
+	}
 	shopsProxy := httputil.NewSingleHostReverseProxy(shopsURL)
 
-	transactionsURL, _ := url.Parse("http://localhost" + ":" + os.Getenv("TRANSACTIONS_SERVER_PORT"))
+	transactionsURL, err := url.Parse("http://localhost/v1" + ":" + cfg.TransactionsServerPort)
+	if err != nil {
+		log.Errorf("Failed to parse transaction server: %d", err)
+	}
 	transactionsProxy := httputil.NewSingleHostReverseProxy(transactionsURL)
 
-	http.HandleFunc("/v1/users/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
 		usersProxy.ServeHTTP(w, r)
 	})
 
-	http.HandleFunc("/v1/books/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/books", func(w http.ResponseWriter, r *http.Request) {
 		booksProxy.ServeHTTP(w, r)
 	})
 
-	http.HandleFunc("/v1/shops/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/shops", func(w http.ResponseWriter, r *http.Request) {
 		shopsProxy.ServeHTTP(w, r)
 	})
 
-	http.HandleFunc("/v1/transactions/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/transactions", func(w http.ResponseWriter, r *http.Request) {
 		transactionsProxy.ServeHTTP(w, r)
 	})
 
-	log.Println("API Gateway server is starting on :8080")
+	log.Infof("API Gateway server is starting on :%s", cfg.GatewayServerPort)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
-		log.Fatalf("Failed to start API Gateway: %v", err)
+	if err = http.ListenAndServe(port, nil); err != nil {
+		log.Errorf("Failed to start API Gateway: %v", err)
 	}
 }
