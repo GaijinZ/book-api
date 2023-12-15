@@ -9,6 +9,10 @@ type Logger interface {
 	Fatalf(message string, args ...interface{})
 }
 
+// make a log configurable, for example
+// there are 5 levels of logs, Debug, Info, Warning, Error, Fatal
+// in some case you don't need to log debug/info etc.
+
 type AppLogger struct {
 	Log *logrus.Logger
 }

@@ -174,7 +174,7 @@ func (b *BookHandler) DeleteBook(c *gin.Context) {
 
 	exists, err := postgres.CheckIDExists("books", bookID, b.bookRepository.GetDBPool())
 	if err != nil {
-		errorMessage := "Checking book ID error: " + string(rune(bookID))
+		errorMessage := "Checking book ID error: " + string(rune(bookID)) // why do you need rune? it should be as integer
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
 		return
 	}

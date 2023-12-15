@@ -181,6 +181,7 @@ func (b *BookRepository) DeleteBook(id int) error {
 	return nil
 }
 
+// don't pass db as a value
 func IsAssigned(log logger.Logger, bookID, userID int, db *pgxpool.Pool) (bool, error) {
 	query := "SELECT EXISTS (SELECT 1 FROM user_book WHERE id = $1 AND user_id = $2)"
 
@@ -194,6 +195,7 @@ func IsAssigned(log logger.Logger, bookID, userID int, db *pgxpool.Pool) (bool, 
 	return exists, nil
 }
 
+// don't pass db as a value
 func ValidateISBNExists(log logger.Logger, isbn string, db *pgxpool.Pool) (bool, error) {
 	query := "SELECT EXISTS(SELECT 1 FROM user_book WHERE isbn = $1)"
 

@@ -1,6 +1,6 @@
 package config
 
-type GlobalEnv struct {
+type GlobalEnv struct { // cleanup unused variables
 	GatewayServerPort        string `envconfig:"gateway_server_port"`
 	UsersServerPort          string `envconfig:"users_server_port"`
 	BooksServerPort          string `envconfig:"books_server_port"`

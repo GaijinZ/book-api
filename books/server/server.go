@@ -10,7 +10,7 @@ import (
 	"library/pkg/tracing"
 )
 
-func Run(ctx *context.Context, port string) {
+func Run(ctx *context.Context, port string) { // looks good
 	dbPool := postgres.GetConnection()
 	defer dbPool.Close()
 

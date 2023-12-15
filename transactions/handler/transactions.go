@@ -31,7 +31,7 @@ func (t *TransactionHandler) BuyBook(c *gin.Context) {
 
 	userID := c.GetInt("userID")
 
-	bookID, err := strconv.Atoi(c.Param("book_id"))
+	bookID, err := strconv.Atoi(c.Param("book_id")) // move getting param to midleware, and pass it as context
 	if err != nil {
 		errorMessage := "Wrong book ID: " + err.Error()
 		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})

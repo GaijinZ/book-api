@@ -9,6 +9,7 @@ type Author struct {
 	Name string `json:"name,omitempty" form:"name"`
 }
 
+// use separete Book structure for DB, for response, for request
 type Book struct {
 	Name          string `json:"name,omitempty" form:"name"`
 	DatePublished string `json:"date_published,omitempty" form:"date_published"`

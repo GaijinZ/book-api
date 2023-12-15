@@ -27,7 +27,7 @@ func NewTransactionRepository(ctx context.Context, dbPool *pgxpool.Pool) Transac
 }
 
 func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
-	log := t.ctx.Value("logger").(logger.Logger)
+	log := t.ctx.Value("logger").(logger.Logger) // make "logger" as const
 	userTransaction := &models.UserTransactionRequest{
 		BookList:        &models.Book{},
 		UserID:          userID,

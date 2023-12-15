@@ -5,11 +5,11 @@ type Author struct {
 	Names string `json:"authors"`
 }
 
-type IndustryIdentifier struct {
+type IndustryIdentifier struct { // what is IndustryIdentifier?
 	Identifier string `json:"identifier"`
 }
 
-type GoogleBooksRequest struct {
+type GoogleBooksRequest struct { // why is it Google?
 	Items []struct {
 		VolumeInfo struct {
 			Name          string               `json:"title"`

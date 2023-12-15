@@ -10,9 +10,9 @@ import (
 )
 
 func Run(ctx context.Context, cfg config.GlobalEnv, port string) {
-	log := ctx.Value("logger").(logger.Logger)
+	log := ctx.Value("logger").(logger.Logger) // move "logger" value to constants, better to make some utils pkg, with all constants
 
-	usersURL, err := url.Parse("http://localhost/v1" + ":" + cfg.UsersServerPort)
+	usersURL, err := url.Parse("http://localhost/v1" + ":" + cfg.UsersServerPort) // make external services host configurable
 	if err != nil {
 		log.Errorf("Failed to parse user server: %d", err)
 	}
