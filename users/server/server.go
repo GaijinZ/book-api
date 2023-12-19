@@ -2,22 +2,47 @@ package server
 
 import (
 	"context"
+
 	"github.com/gin-gonic/gin"
+	"github.com/kelseyhightower/envconfig"
+
+	"library/pkg/config"
 	"library/pkg/middleware"
 	"library/pkg/postgres"
 	"library/pkg/tracing"
+	"library/pkg/utils"
 	"library/users/handler"
-	repository2 "library/users/repository"
+	"library/users/repository"
+
+	"log"
+	"time"
 )
 
-func Run(ctx context.Context, port string) {
-	dbPool := postgres.GetConnection()
-	defer dbPool.Close()
+func Run(ctx *context.Context, cfg config.GlobalEnv) {
+	if err := envconfig.Process("bookapi", &cfg); err != nil {
+		log.Fatal(err.Error())
+	}
 
-	userRepository := repository2.NewUserRepository(ctx, dbPool)
-	authRepository := repository2.NewAuthRepository(ctx, dbPool)
-	authUser := handler.NewUserAuth(ctx, authRepository)
-	handlerUser := handler.NewUserHandler(ctx, userRepository)
+	log := utils.GetLogger(*ctx)
+
+	configDB := postgres.DBConfig{
+		DriverName:      "postgres",
+		DataSourceName:  cfg.PostgresBooks,
+		MaxOpenConns:    10,
+		MaxIdleConns:    5,
+		ConnMaxLifetime: time.Hour,
+	}
+
+	db, err := postgres.NewDB(*ctx, configDB)
+	if err != nil {
+		log.Errorf("Failed to configure db connection: %v", err)
+	}
+	defer db.Close()
+
+	userRepository := repository.NewUserRepository(*ctx, *db)
+	authRepository := repository.NewAuthRepository(*ctx, *db)
+	authUser := handler.NewUserAuth(*ctx, authRepository)
+	handlerUser := handler.NewUserHandler(*ctx, userRepository)
 
 	router := gin.Default()
 
@@ -49,8 +74,9 @@ func Run(ctx context.Context, port string) {
 		tracing.TraceMiddleware,
 		middleware.IsAuthorized,
 		middleware.GetToken,
+		middleware.GetDeleteParam,
 		handlerUser.DeleteUser,
 	)
 
-	router.Run(port)
+	router.Run(":" + cfg.UsersServerPort)
 }

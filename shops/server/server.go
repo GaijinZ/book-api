@@ -3,16 +3,32 @@ package server
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"library/pkg/config"
 	"library/pkg/postgres"
+	"library/pkg/utils"
 	"library/shops/handler"
 	"library/shops/repository"
+	"time"
 )
 
-func Run(ctx *context.Context, port string) {
-	dbPool := postgres.GetConnection()
-	defer dbPool.Close()
+func Run(ctx *context.Context, cfg config.GlobalEnv) {
+	log := utils.GetLogger(*ctx)
 
-	shopRepository := repository.NewShopRepository(*ctx, dbPool)
+	configDB := postgres.DBConfig{
+		DriverName:      "postgres",
+		DataSourceName:  cfg.PostgresBooks,
+		MaxOpenConns:    10,
+		MaxIdleConns:    5,
+		ConnMaxLifetime: time.Hour,
+	}
+
+	db, err := postgres.NewDB(*ctx, configDB)
+	if err != nil {
+		log.Errorf("Failed to configure db connection: %v", err)
+	}
+	defer db.Close()
+
+	shopRepository := repository.NewShopRepository(*ctx, *db)
 	shopHandler := handler.NewShopHandler(*ctx, shopRepository)
 
 	router := gin.Default()
@@ -21,5 +37,5 @@ func Run(ctx *context.Context, port string) {
 
 	v1.POST("/load-books", shopHandler.LoadBooks)
 
-	router.Run(port)
+	router.Run(":" + cfg.ShopsServerPort)
 }

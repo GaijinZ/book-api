@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/kelseyhightower/envconfig"
 	"library/pkg/config"
 	"library/pkg/logger"
+	"library/pkg/utils"
 	"library/transactions/server"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,18 +21,19 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	ctx = context.WithValue(ctx, "logger", logger.NewLogger())
+	ctx = context.WithValue(ctx, "logger", logger.NewLogger(2))
+	log := utils.GetLogger(ctx)
 
 	if err := envconfig.Process("bookapi", &cfg); err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf(err.Error())
 	}
 
-	go server.Run(&ctx, ":"+cfg.TransactionsServerPort)
+	go server.Run(&ctx, cfg)
 
 	select {
 	case sig := <-interrupt:
-		fmt.Printf("Received signal: %v\n", sig)
+		log.Infof("Received signal: %v\n", sig)
 	case <-ctx.Done():
-		fmt.Println("Context done")
+		log.Infof("Context done")
 	}
 }

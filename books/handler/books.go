@@ -2,15 +2,14 @@ package handler
 
 import (
 	"context"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"library/books/models"
 	"library/books/repository"
 	"library/pkg"
-	"library/pkg/logger"
 	"library/pkg/postgres"
+	"library/pkg/utils"
 	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 type BookerHandler interface {
@@ -34,9 +33,10 @@ func NewBookHandler(ctx context.Context, booker repository.BookerRepository) Boo
 }
 
 func (b *BookHandler) AddBook(c *gin.Context) {
-	var book models.Book
+	var book models.BookRequest
 	var err error
-	log := b.ctx.Value("logger").(logger.Logger)
+
+	log := utils.GetLogger(b.ctx)
 
 	book.UserID.ID = c.GetInt("userID")
 
@@ -64,7 +64,7 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.AddBook(book.UserID.ID, book)
+	err = b.bookRepository.AddBook(&book)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -74,37 +74,34 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 }
 
 func (b *BookHandler) UpdateBook(c *gin.Context) {
-	var book models.Book
-	log := b.ctx.Value("logger").(logger.Logger)
+	var book models.BookRequest
+	var err error
 
-	bookID, err := strconv.Atoi(c.Param("book_id"))
-	if err != nil {
-		errorMessage := "Wrong book ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
-		return
-	}
+	log := utils.GetLogger(b.ctx)
 
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	exists, err := postgres.CheckIDExists("books", bookID, b.bookRepository.GetDBPool())
+	book.ID = c.GetInt("book_id")
+
+	exists, err := postgres.CheckIDExists("books", book.ID, b.bookRepository.GetDBPool())
 	if err != nil {
-		errorMessage := "Checking book ID error: " + string(rune(bookID))
+		errorMessage := fmt.Sprintf("Checking book ID error: %v", book.ID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
 		return
 	}
 
 	if !exists {
-		errorMessage := "Book ID doesn't exists: " + string(rune(bookID))
+		errorMessage := fmt.Sprintf("Book ID doesn't exists: %v", book.ID)
 		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}
 
 	book.UserID.ID = c.GetInt("userID")
 
-	isAssigned, err := repository.IsAssigned(log, bookID, book.UserID.ID, b.bookRepository.GetDBPool())
+	isAssigned, err := repository.IsAssigned(log, book.ID, book.UserID.ID, b.bookRepository.GetDBPool())
 	if err != nil {
 		errorMessage := "Error checking book assignment"
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
@@ -124,7 +121,7 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	err = b.bookRepository.UpdateBook(bookID, book)
+	err = b.bookRepository.UpdateBook(&book)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -134,16 +131,12 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 }
 
 func (b *BookHandler) GetBook(c *gin.Context) {
-	var book models.Book
+	var book models.BookResponse
+	var err error
 
-	bookID, err := strconv.Atoi(c.Param("book_id"))
-	if err != nil {
-		errorMessage := "Wrong book ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
-		return
-	}
+	book.ID = c.GetInt("book_id")
 
-	err = b.bookRepository.GetBook(bookID, &book)
+	err = b.bookRepository.GetBook(&book)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -153,34 +146,29 @@ func (b *BookHandler) GetBook(c *gin.Context) {
 }
 
 func (b *BookHandler) GetAllBooks(c *gin.Context) {
-	users, err := b.bookRepository.GetAllBooks()
+	books, err := b.bookRepository.GetAllBooks()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"books": users})
+	c.JSON(http.StatusOK, gin.H{"books": books})
 }
 
 func (b *BookHandler) DeleteBook(c *gin.Context) {
-	log := b.ctx.Value("logger").(logger.Logger)
+	log := utils.GetLogger(b.ctx)
 
-	bookID, err := strconv.Atoi(c.Param("book_id"))
-	if err != nil {
-		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
-		return
-	}
+	bookID := c.GetInt("book_id")
 
-	exists, err := postgres.CheckIDExists("books", bookID, b.bookRepository.GetDBPool())
+	exists, err := postgres.CheckIDExists("user_book", bookID, b.bookRepository.GetDBPool())
 	if err != nil {
-		errorMessage := "Checking book ID error: " + string(rune(bookID))
+		errorMessage := fmt.Sprintf("Checking book ID error: %v", bookID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errorMessage})
 		return
 	}
 
 	if !exists {
-		errorMessage := "Book ID doesn't exists: " + string(rune(bookID))
+		errorMessage := fmt.Sprintf("Book ID doesn't exists: %v", bookID)
 		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
 		return
 	}

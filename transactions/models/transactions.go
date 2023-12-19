@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type UserTransaction struct {
+type UserTransactionResponse struct {
 	ID              int             `json:"id,omitempty"`
 	BookList        json.RawMessage `json:"book_list"`
 	UserID          int             `json:"user_id,omitempty"`

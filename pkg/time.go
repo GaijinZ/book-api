@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func CheckDate(log logger.Logger, book *models.Book) error {
+func CheckDate(log logger.Logger, book *models.BookRequest) error {
 	datePublished, err := time.Parse(time.DateOnly, book.DatePublished)
 	if err != nil {
 		log.Errorf("Failed to parse date: ", err)

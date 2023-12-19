@@ -3,31 +3,33 @@ package repository
 import (
 	"context"
 	"encoding/json"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"library/pkg/logger"
+	"library/pkg/postgres"
+	"library/pkg/utils"
 	"library/transactions/models"
 	"time"
 )
 
 type TransactionerRepository interface {
 	BuyBook(userID, bookID, quantity int) error
-	TransactionHistory(userID int) ([]models.UserTransaction, error)
+	TransactionHistory(userID int) ([]models.UserTransactionResponse, error)
 }
 
 type TransactionRepository struct {
-	ctx    context.Context
-	DBPool *pgxpool.Pool
+	ctx context.Context
+	DB  postgres.DB
 }
 
-func NewTransactionRepository(ctx context.Context, dbPool *pgxpool.Pool) TransactionerRepository {
+func NewTransactionRepository(ctx context.Context, db postgres.DB) TransactionerRepository {
 	return &TransactionRepository{
-		ctx:    ctx,
-		DBPool: dbPool,
+		ctx: ctx,
+		DB:  db,
 	}
 }
 
 func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
-	log := t.ctx.Value("logger").(logger.Logger)
+	log := utils.GetLogger(t.ctx)
+
 	userTransaction := &models.UserTransactionRequest{
 		BookList:        &models.Book{},
 		UserID:          userID,
@@ -36,13 +38,13 @@ func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
 		TransactionDate: time.Now(),
 	}
 
-	tx, err := t.DBPool.Begin(context.Background())
+	tx, err := t.DB.DB.Begin()
 	if err != nil {
 		log.Errorf("Failed to begin transaction: %v", err)
 		return err
 	}
 
-	availability, err := isAvailable(log, userTransaction.BookID, t.DBPool)
+	availability, err := isAvailable(log, userTransaction.BookID, t.DB)
 	if err != nil {
 		return err
 	}
@@ -52,21 +54,21 @@ func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
 		return err
 	}
 
-	if err = availableQuantity(log, userTransaction, t.DBPool); err != nil {
+	if err = availableQuantity(log, userTransaction, t.DB); err != nil {
 		log.Errorf("Failed to check available quantity of book")
 		return err
 	}
 
-	userTransaction.BookList, err = getBookDetails(log, userTransaction, t.DBPool)
+	userTransaction.BookList, err = getBookDetails(log, userTransaction, t.DB)
 	if err != nil {
 		log.Errorf("Failed to get book details: %v", err)
 		return err
 	}
 
-	changed, err := getTransactionData(log, userTransaction, t.DBPool)
+	changed, err := getTransactionData(log, userTransaction, t.DB)
 	if err != nil {
 		log.Errorf("Failed to get transaction data")
-		tx.Rollback(context.Background())
+		tx.Rollback()
 		return err
 	}
 
@@ -80,11 +82,11 @@ func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
 		return err
 	}
 
-	if err = updateUserTransactions(log, userTransaction, newBookList, t.DBPool); err != nil {
+	if err = updateUserTransactions(log, userTransaction, newBookList, t.DB); err != nil {
 		return err
 	}
 
-	err = tx.Commit(context.Background())
+	err = tx.Commit()
 	if err != nil {
 		log.Errorf("Failed to commit transaction: %v", err)
 		return err
@@ -93,12 +95,12 @@ func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
 	return nil
 }
 
-func (t *TransactionRepository) TransactionHistory(userID int) ([]models.UserTransaction, error) {
-	var transactions []models.UserTransaction
-	log := t.ctx.Value("logger").(logger.Logger)
+func (t *TransactionRepository) TransactionHistory(userID int) ([]models.UserTransactionResponse, error) {
+	var transactions []models.UserTransactionResponse
+	log := utils.GetLogger(t.ctx)
 
 	query := "SELECT book_list, quantity FROM transactions WHERE user_id = $1"
-	rows, err := t.DBPool.Query(context.Background(), query, userID)
+	rows, err := t.DB.DB.Query(query, userID)
 	if err != nil {
 		log.Errorf("Failed to query row: %v", err)
 		return nil, err
@@ -106,7 +108,7 @@ func (t *TransactionRepository) TransactionHistory(userID int) ([]models.UserTra
 	defer rows.Close()
 
 	for rows.Next() {
-		var transaction models.UserTransaction
+		var transaction models.UserTransactionResponse
 
 		if err = rows.Scan(&transaction.BookList, &transaction.Quantity); err != nil {
 			log.Errorf("Failed to scan into UserTransaction: %v", err)
@@ -125,11 +127,11 @@ func (t *TransactionRepository) TransactionHistory(userID int) ([]models.UserTra
 }
 
 // isAvailable check book for availability
-func isAvailable(log logger.Logger, id int, db *pgxpool.Pool) (bool, error) {
+func isAvailable(log logger.Logger, id int, db postgres.DB) (bool, error) {
 	var availability bool
 
 	query := "SELECT EXISTS (SELECT 1 FROM book WHERE id = $1 AND quantity > 0)"
-	err := db.QueryRow(context.Background(), query, id).Scan(&availability)
+	err := db.DB.QueryRow(query, id).Scan(&availability)
 	if err != nil {
 		log.Errorf("Failed to query row: %v", err)
 		return availability, err
@@ -139,10 +141,10 @@ func isAvailable(log logger.Logger, id int, db *pgxpool.Pool) (bool, error) {
 }
 
 // availableQuantity check if book has enough quantity
-func availableQuantity(log logger.Logger, userTransaction *models.UserTransactionRequest, db *pgxpool.Pool) error {
+func availableQuantity(log logger.Logger, userTransaction *models.UserTransactionRequest, db postgres.DB) error {
 	var bookQuantity int
 
-	err := db.QueryRow(context.Background(), "SELECT quantity FROM book WHERE id = $1", userTransaction.BookID).
+	err := db.DB.QueryRow("SELECT quantity FROM book WHERE id = $1", userTransaction.BookID).
 		Scan(&bookQuantity)
 	if err != nil {
 		log.Errorf("Failed to fetch available quantity: %V", err)
@@ -160,9 +162,9 @@ func availableQuantity(log logger.Logger, userTransaction *models.UserTransactio
 // processTransaction function to process the transaction, including the ID
 func processTransaction(
 	log logger.Logger,
-	transaction *models.UserTransaction,
+	transaction *models.UserTransactionResponse,
 	userTransaction *models.UserTransactionRequest,
-	db *pgxpool.Pool,
+	db postgres.DB,
 ) (bool, error) {
 	var book models.Book
 	if err := json.Unmarshal(transaction.BookList, &book); err != nil {
@@ -172,14 +174,14 @@ func processTransaction(
 
 	if book.ISBN == userTransaction.BookList.ISBN {
 		transactionsQuery := "UPDATE transactions SET quantity = quantity + $1 WHERE id = $2"
-		_, err := db.Exec(context.Background(), transactionsQuery, userTransaction.Quantity, transaction.ID)
+		_, err := db.DB.Exec(transactionsQuery, userTransaction.Quantity, transaction.ID)
 		if err != nil {
 			log.Errorf("Failed to update available quantity: %v", err)
 			return false, err
 		}
 
 		bookQuery := "UPDATE book SET quantity = quantity - $1 WHERE id = $2"
-		_, err = db.Exec(context.Background(), bookQuery, userTransaction.Quantity, userTransaction.BookList.ID)
+		_, err = db.DB.Exec(bookQuery, userTransaction.Quantity, userTransaction.BookList.ID)
 		if err != nil {
 			log.Errorf("Failed to update available quantity: %v", err)
 			return false, err
@@ -193,7 +195,7 @@ func processTransaction(
 func getBookDetails(
 	log logger.Logger,
 	userTransaction *models.UserTransactionRequest,
-	db *pgxpool.Pool,
+	db postgres.DB,
 ) (*models.Book, error) {
 	var mapID int
 
@@ -213,7 +215,7 @@ func getBookDetails(
 	       book.id = $1;
 	`
 
-	rows, err := db.Query(context.Background(), queryBook, userTransaction.BookID)
+	rows, err := db.DB.Query(queryBook, userTransaction.BookID)
 	if err != nil {
 		log.Errorf("Failed to fetch book details: %v", err)
 		return userTransaction.BookList, err
@@ -264,19 +266,19 @@ func getBookDetails(
 func getTransactionData(
 	log logger.Logger,
 	userTransaction *models.UserTransactionRequest,
-	db *pgxpool.Pool,
+	db postgres.DB,
 ) (bool, error) {
 	var changed bool
 
 	query := "SELECT id, book_list FROM transactions WHERE user_id = $1"
-	rows, err := db.Query(context.Background(), query, userTransaction.UserID)
+	rows, err := db.DB.Query(query, userTransaction.UserID)
 	if err != nil {
 		log.Errorf("Failed to fetch existing transactions: %v", err)
 		return changed, err
 	}
 
 	for rows.Next() {
-		var transaction models.UserTransaction
+		var transaction models.UserTransactionResponse
 
 		if err = rows.Scan(&transaction.ID, &transaction.BookList); err != nil {
 			log.Errorf("Failed to scan rows: %v", err)
@@ -303,11 +305,10 @@ func updateUserTransactions(
 	log logger.Logger,
 	userTransaction *models.UserTransactionRequest,
 	newBookList []byte,
-	db *pgxpool.Pool,
+	db postgres.DB,
 ) error {
 	transactionsQuery := "INSERT INTO transactions (user_id, book_list, quantity, transaction_date) VALUES ($1, $2, $3, $4)"
-	_, err := db.Exec(
-		context.Background(),
+	_, err := db.DB.Exec(
 		transactionsQuery,
 		userTransaction.UserID,
 		newBookList, userTransaction.Quantity,
@@ -319,7 +320,7 @@ func updateUserTransactions(
 	}
 
 	bookQuery := "UPDATE book SET quantity = quantity - $1 WHERE id = $2"
-	_, err = db.Exec(context.Background(), bookQuery, userTransaction.Quantity, userTransaction.BookList.ID)
+	_, err = db.DB.Exec(bookQuery, userTransaction.Quantity, userTransaction.BookList.ID)
 	if err != nil {
 		log.Errorf("Failed to update available quantity: %v", err)
 		return err

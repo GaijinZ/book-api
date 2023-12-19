@@ -3,15 +3,13 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"library/pkg"
 	"library/users/models"
 	"library/users/repository"
 	"log"
 	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 
 	"library/pkg/middleware"
 )
@@ -76,14 +74,14 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 
-	userID := c.GetInt("userID")
-
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.userRepository.UpdateUser(userID, &user)
+	user.ID = c.GetInt("userID")
+
+	err := h.userRepository.UpdateUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -93,11 +91,11 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
-	var user models.User
+	var user models.UserResponse
 
-	userID := c.GetInt("userID")
+	user.ID = c.GetInt("userID")
 
-	err := h.userRepository.GetUser(userID, &user)
+	err := h.userRepository.GetUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -134,12 +132,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	deleteUser, err := strconv.Atoi(c.Param("delete_id"))
-	if err != nil {
-		errorMessage := "Wrong user ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
-		return
-	}
+	deleteUser := c.GetInt("delete_id")
 
 	err = h.userRepository.DeleteUser(deleteUser)
 	if err != nil {

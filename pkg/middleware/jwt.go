@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"library/pkg/config"
 	models2 "library/users/models"
 	"os"
 	"strconv"
@@ -31,8 +32,10 @@ func GenerateJWT(user models2.User) (string, error) {
 }
 
 func VerifyJWT(tokenString string) (claims *models2.Claims, err error) {
+	var cfg config.GlobalEnv
+
 	token, err := jwt.ParseWithClaims(tokenString, &models2.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("SECRET_KEY")), nil
+		return []byte(cfg.SecretKey), nil
 	})
 
 	if err != nil {

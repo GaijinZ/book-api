@@ -3,18 +3,34 @@ package server
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"library/pkg/config"
 	"library/pkg/middleware"
 	"library/pkg/postgres"
 	"library/pkg/tracing"
+	"library/pkg/utils"
 	"library/transactions/handler"
 	"library/transactions/repository"
+	"time"
 )
 
-func Run(ctx *context.Context, port string) {
-	dbPool := postgres.GetConnection()
-	defer dbPool.Close()
+func Run(ctx *context.Context, cfg config.GlobalEnv) {
+	log := utils.GetLogger(*ctx)
 
-	transactionsRepository := repository.NewTransactionRepository(*ctx, dbPool)
+	configDB := postgres.DBConfig{
+		DriverName:      "postgres",
+		DataSourceName:  cfg.PostgresBooks,
+		MaxOpenConns:    10,
+		MaxIdleConns:    5,
+		ConnMaxLifetime: time.Hour,
+	}
+
+	db, err := postgres.NewDB(*ctx, configDB)
+	if err != nil {
+		log.Errorf("Failed to configure db connection: %v", err)
+	}
+	defer db.Close()
+
+	transactionsRepository := repository.NewTransactionRepository(*ctx, *db)
 	transactionsHandler := handler.NewTransactionHandler(*ctx, transactionsRepository)
 
 	router := gin.Default()
@@ -34,5 +50,5 @@ func Run(ctx *context.Context, port string) {
 		transactionsHandler.TransactionHistory,
 	)
 
-	router.Run(port)
+	router.Run(":" + cfg.TransactionsServerPort)
 }

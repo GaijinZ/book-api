@@ -2,43 +2,50 @@ package postgres
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/kelseyhightower/envconfig"
-	"library/pkg/config"
-	"library/pkg/logger"
-	"log"
-	"os"
+	"database/sql"
+	"library/pkg/utils"
+	"time"
+
+	_ "github.com/lib/pq"
 )
 
-var dbPool *pgxpool.Pool
-
-func getPostgresConnectionString() {
-	var cfg config.GlobalEnv
-	var err error
-
-	if err := envconfig.Process("bookapi", &cfg); err != nil {
-		log.Fatal(err.Error())
-	}
-
-	log := logger.NewLogger()
-
-	dbPool, err = pgxpool.New(context.Background(), cfg.PostgresBooks)
-	if err != nil {
-		log.Errorf("Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-
-	if err = dbPool.Ping(context.Background()); err != nil {
-		log.Errorf("Ping failed: %v", err)
-	}
-
-	log.Infof("Postgres connected!")
+type DBConfig struct {
+	DriverName      string
+	DataSourceName  string
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
 }
 
-func GetConnection() *pgxpool.Pool {
-	if dbPool == nil {
-		getPostgresConnectionString()
+type DB struct {
+	DB *sql.DB
+}
+
+func NewDB(ctx context.Context, configDB DBConfig) (*DB, error) {
+	log := utils.GetLogger(ctx)
+
+	db, err := sql.Open(configDB.DriverName, configDB.DataSourceName)
+	if err != nil {
+		return nil, err
 	}
 
-	return dbPool
+	db.SetMaxOpenConns(configDB.MaxOpenConns)
+	db.SetMaxIdleConns(configDB.MaxIdleConns)
+	db.SetConnMaxLifetime(configDB.ConnMaxLifetime)
+
+	log.Infof("Postgres connected!")
+
+	return &DB{DB: db}, nil
+}
+
+func (d *DB) Ping() error {
+	return d.DB.Ping()
+}
+
+func (d *DB) Close() error {
+	return d.DB.Close()
+}
+
+func (d *DB) GetConnection(ctx context.Context) (*sql.Conn, error) {
+	return d.DB.Conn(ctx)
 }

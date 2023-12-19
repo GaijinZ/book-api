@@ -3,14 +3,14 @@ package gateway
 import (
 	"context"
 	"library/pkg/config"
-	"library/pkg/logger"
+	"library/pkg/utils"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 )
 
 func Run(ctx context.Context, cfg config.GlobalEnv, port string) {
-	log := ctx.Value("logger").(logger.Logger)
+	log := utils.GetLogger(ctx)
 
 	usersURL, err := url.Parse("http://localhost/v1" + ":" + cfg.UsersServerPort)
 	if err != nil {

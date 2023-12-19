@@ -5,18 +5,18 @@ type Author struct {
 	Names string `json:"authors"`
 }
 
-type IndustryIdentifier struct {
+type ISBN struct {
 	Identifier string `json:"identifier"`
 }
 
-type GoogleBooksRequest struct {
+type BooksRequest struct {
 	Items []struct {
 		VolumeInfo struct {
-			Name          string               `json:"title"`
-			DatePublished string               `json:"publishedDate"`
-			ISBN          []IndustryIdentifier `json:"industryIdentifiers"`
-			PageCount     int                  `json:"pageCount"`
-			Authors       []string             `json:"authors"`
+			Name          string   `json:"title"`
+			DatePublished string   `json:"publishedDate"`
+			ISBN          []ISBN   `json:"isbn"`
+			PageCount     int      `json:"pageCount"`
+			Authors       []string `json:"authors"`
 		} `json:"volumeInfo"`
 	} `json:"items"`
 }

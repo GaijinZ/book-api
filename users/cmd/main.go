@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/sirupsen/logrus"
 	"library/pkg/config"
 	"library/pkg/logger"
+	"library/pkg/utils"
 	"library/users/server"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,20 +21,21 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	ctx = context.WithValue(ctx, "logger", logger.NewLogger())
+	ctx = context.WithValue(ctx, "logger", logger.NewLogger(2))
+	log := utils.GetLogger(ctx)
 
 	if err := envconfig.Process("bookapi", &cfg); err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf(err.Error())
 	}
 
-	go server.Run(ctx, ":"+cfg.UsersServerPort)
+	go server.Run(&ctx, cfg)
 
 	select {
 	case <-interrupt:
-		logrus.Infof("Received a shutdown signal...")
+		log.Infof("Received a shutdown signal...")
 		close(interrupt)
 	case <-ctx.Done():
-		logrus.Infof("Context done")
+		log.Infof("Context done")
 		close(interrupt)
 	}
 }

@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-func GetBooks(bookTitle string) (models.GoogleBooksRequest, error) {
-	var googleBooksRequest models.GoogleBooksRequest
+func GetBooks(bookTitle string) (models.BooksRequest, error) {
+	var googleBooksRequest models.BooksRequest
 
 	url := fmt.Sprintf("https://www.googleapis.com/books/v1/volumes?q=%s", bookTitle)
 
@@ -20,7 +20,7 @@ func GetBooks(bookTitle string) (models.GoogleBooksRequest, error) {
 
 	err = json.NewDecoder(resp.Body).Decode(&googleBooksRequest)
 	if err != nil {
-		return models.GoogleBooksRequest{}, err
+		return models.BooksRequest{}, err
 	}
 
 	return googleBooksRequest, nil

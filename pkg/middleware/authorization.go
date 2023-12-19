@@ -58,3 +58,27 @@ func GetToken(c *gin.Context) {
 	c.Set("userID", userID)
 	c.Next()
 }
+
+func GetBookParam(c *gin.Context) {
+	bookID, err := strconv.Atoi(c.Param("book_id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.Set("bookID", bookID)
+	c.Next()
+}
+
+func GetDeleteParam(c *gin.Context) {
+	deleteID, err := strconv.Atoi(c.Param("delete_id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.Set("deleteID", deleteID)
+	c.Next()
+}

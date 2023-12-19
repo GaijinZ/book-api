@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"library/pkg/logger"
+	"library/pkg/postgres"
+	"library/pkg/utils"
 	"library/users/models"
 )
 
@@ -12,23 +12,22 @@ type AutherRepository interface {
 }
 
 type AuthRepository struct {
-	ctx    context.Context
-	DBPool *pgxpool.Pool
+	ctx context.Context
+	db  postgres.DB
 }
 
-func NewAuthRepository(ctx context.Context, dbPool *pgxpool.Pool) AutherRepository {
+func NewAuthRepository(ctx context.Context, db postgres.DB) AutherRepository {
 	return &AuthRepository{
-		ctx:    ctx,
-		DBPool: dbPool,
+		ctx: ctx,
+		db:  db,
 	}
 }
 
 func (u *AuthRepository) Login(user *models.User, auth *models.Authentication) error {
-	log := u.ctx.Value("logger").(logger.Logger)
+	log := utils.GetLogger(u.ctx)
 
 	query := "SELECT id, firstname, lastname, password, email, role FROM users WHERE email=$1"
-	err := u.DBPool.QueryRow(
-		context.Background(),
+	err := u.db.DB.QueryRow(
 		query,
 		auth.Email,
 	).Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Password, &user.Email, &user.Role)
