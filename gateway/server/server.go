@@ -10,27 +10,28 @@ import (
 )
 
 func Run(ctx context.Context, cfg config.GlobalEnv, port string) {
+	host := "http://localhost/v1"
 	log := utils.GetLogger(ctx)
 
-	usersURL, err := url.Parse("http://localhost/v1" + ":" + cfg.UsersServerPort)
+	usersURL, err := url.Parse(host + ":" + cfg.UsersServerPort)
 	if err != nil {
 		log.Errorf("Failed to parse user server: %d", err)
 	}
 	usersProxy := httputil.NewSingleHostReverseProxy(usersURL)
 
-	booksURL, err := url.Parse("http://localhost/v1" + ":" + cfg.BooksServerPort)
+	booksURL, err := url.Parse(host + ":" + cfg.BooksServerPort)
 	if err != nil {
 		log.Errorf("Failed to parse book server: %d", err)
 	}
 	booksProxy := httputil.NewSingleHostReverseProxy(booksURL)
 
-	shopsURL, err := url.Parse("http://localhost/v1" + ":" + cfg.ShopsServerPort)
+	shopsURL, err := url.Parse(host + ":" + cfg.ShopsServerPort)
 	if err != nil {
 		log.Errorf("Failed to parse shops server: %d", err)
 	}
 	shopsProxy := httputil.NewSingleHostReverseProxy(shopsURL)
 
-	transactionsURL, err := url.Parse("http://localhost/v1" + ":" + cfg.TransactionsServerPort)
+	transactionsURL, err := url.Parse(host + ":" + cfg.TransactionsServerPort)
 	if err != nil {
 		log.Errorf("Failed to parse transaction server: %d", err)
 	}
