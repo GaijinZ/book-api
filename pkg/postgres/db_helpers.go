@@ -6,7 +6,7 @@ import (
 )
 
 func CheckIDExists(table string, id int, db DB) (bool, error) {
-	log := logger.NewLogger()
+	log := logger.NewLogger(2)
 
 	query := fmt.Sprintf("SELECT EXISTS(SELECT 1 FROM %s WHERE id=$1)", table)
 

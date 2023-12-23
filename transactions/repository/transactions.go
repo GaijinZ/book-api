@@ -72,7 +72,7 @@ func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
 		return err
 	}
 
-	if changed {
+	if changed == true {
 		return nil
 	}
 
@@ -147,7 +147,7 @@ func availableQuantity(log logger.Logger, userTransaction *models.UserTransactio
 	err := db.DB.QueryRow("SELECT quantity FROM book WHERE id = $1", userTransaction.BookID).
 		Scan(&bookQuantity)
 	if err != nil {
-		log.Errorf("Failed to fetch available quantity: %V", err)
+		log.Errorf("Failed to fetch available quantity: %v", err)
 		return err
 	}
 
@@ -285,7 +285,6 @@ func getTransactionData(
 			return changed, err
 		}
 
-		// check and update transaction quantity
 		changed, err = processTransaction(log, &transaction, userTransaction, db)
 		if err != nil {
 			return changed, nil
@@ -311,7 +310,8 @@ func updateUserTransactions(
 	_, err := db.DB.Exec(
 		transactionsQuery,
 		userTransaction.UserID,
-		newBookList, userTransaction.Quantity,
+		newBookList,
+		userTransaction.Quantity,
 		userTransaction.TransactionDate,
 	)
 	if err != nil {
