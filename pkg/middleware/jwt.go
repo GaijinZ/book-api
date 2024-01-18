@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"library/pkg/config"
-	models2 "library/users/models"
+	"library/users/models"
 	"os"
 	"strconv"
 	"time"
@@ -10,8 +10,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-func GenerateJWT(user models2.User) (string, error) {
-	claims := &models2.Claims{
+func GenerateJWT(user models.User) (string, error) {
+	claims := &models.Claims{
 		UserID: strconv.Itoa(user.ID),
 		Email:  user.Email,
 		Role:   user.Role,
@@ -31,10 +31,10 @@ func GenerateJWT(user models2.User) (string, error) {
 	return tokenString, nil
 }
 
-func VerifyJWT(tokenString string) (claims *models2.Claims, err error) {
+func VerifyJWT(tokenString string) (claims *models.Claims, err error) {
 	var cfg config.GlobalEnv
 
-	token, err := jwt.ParseWithClaims(tokenString, &models2.Claims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.SecretKey), nil
 	})
 
@@ -42,7 +42,7 @@ func VerifyJWT(tokenString string) (claims *models2.Claims, err error) {
 		return nil, err
 	}
 
-	claims, ok := token.Claims.(*models2.Claims)
+	claims, ok := token.Claims.(*models.Claims)
 
 	if !ok {
 		return nil, err
