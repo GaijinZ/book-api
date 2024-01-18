@@ -4,18 +4,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"net/url"
 )
 
 type Trace struct {
 	RequestID     string
-	RequestURL    string
+	RequestURL    *url.URL
 	RequestMethod string
 }
 
 func NewTrace(c *gin.Context) *Trace {
 	return &Trace{
 		RequestID:     uuid.NewString(),
-		RequestURL:    c.Request.RequestURI,
+		RequestURL:    c.Request.URL,
 		RequestMethod: c.Request.Method,
 	}
 }
