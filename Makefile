@@ -22,3 +22,7 @@ run_books:
 
 run_gateway:
 	docker run --network $(NETWORK) --name gateway -p $(GATEWAY_SERVER_PORT):$(GATEWAY_SERVER_PORT) --env-file init-scripts/env-vars-docker.sh gateway
+
+counterfeiter:
+	counterfeiter users/repository UsererRepository
+	counterfeiter books/repository BookerRepository
