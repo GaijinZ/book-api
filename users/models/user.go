@@ -29,6 +29,12 @@ type Authentication struct {
 	Password string `json:"password" form:"password"`
 }
 
+type ActivationMessage struct {
+	Token  string
+	UserID int
+	Email  string
+}
+
 func (u *User) ValidateUser() error {
 	validNameRegex := regexp.MustCompile(`^[a-zA-Z]+$`)
 

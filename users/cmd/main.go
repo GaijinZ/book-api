@@ -5,11 +5,15 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"library/pkg/config"
 	"library/pkg/logger"
+	"library/pkg/postgres"
 	"library/pkg/utils"
+	"library/users/handler"
+	"library/users/repository"
 	"library/users/server"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -28,7 +32,28 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	go server.Run(&ctx, cfg)
+	configDB := postgres.DBConfig{
+		DriverName:      "postgres",
+		DataSourceName:  cfg.PostgresBooks,
+		MaxOpenConns:    10,
+		MaxIdleConns:    5,
+		ConnMaxLifetime: time.Hour,
+	}
+
+	db, err := postgres.NewDB(ctx, configDB)
+	if err != nil {
+		log.Errorf("Failed to configure db connection: %v", err)
+	}
+	defer db.Close()
+
+	userRepository := repository.NewUserRepository(ctx, *db)
+	authRepository := repository.NewAuthRepository(ctx, *db)
+	authUser := handler.NewUserAuth(ctx, authRepository)
+	handlerUser := handler.NewUserHandler(ctx, userRepository)
+
+	router := server.NewRouter(authUser, handlerUser)
+
+	go router.Run(":" + cfg.UsersServerPort)
 
 	select {
 	case <-interrupt:
