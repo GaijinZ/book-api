@@ -48,27 +48,26 @@ func (r *UserRepository) AddUser(user *models.User) (int, error) {
 		return 0, errors.New("user email already exists")
 	}
 
-	insertQuery := "INSERT INTO users (firstname, lastname, email, password, role) VALUES ($1, $2, $3, $4, $5)"
-	result, err := r.DB.DB.Exec(
+	var lastInsertedID int
+	insertQuery := `
+INSERT INTO users (firstname, lastname, email, password, role) 
+VALUES ($1, $2, $3, $4, $5) 
+RETURNING id
+`
+	err = r.DB.DB.QueryRow(
 		insertQuery,
 		user.Firstname,
 		user.Lastname,
 		user.Email,
 		user.Password,
 		user.Role,
-	)
+	).Scan(&lastInsertedID)
 	if err != nil {
 		log.Errorf("Failed to add user to database: %v", err)
 		return 0, err
 	}
 
-	lastInsertedID, err := result.LastInsertId()
-	if err != nil {
-		log.Errorf("Failed to get last inserted ID: %v", err)
-		return 0, errors.New("error getting last insert ID")
-	}
-
-	return int(lastInsertedID), nil
+	return lastInsertedID, nil
 }
 
 func (r *UserRepository) UpdateUser(user *models.User) (*models.UserResponse, error) {
