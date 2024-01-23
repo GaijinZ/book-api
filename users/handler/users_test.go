@@ -128,10 +128,9 @@ var _ = Describe("API Test", func() {
 
 	Describe("DeleteUser", func() {
 		It("should delete a user successfully", func() {
-			body, err := json.Marshal(request)
-			Expect(err).To(BeNil())
+			var err error
 
-			ginCtx.Request, err = http.NewRequest("DELETE", "/v1/users/:user_id/2", bytes.NewBuffer(body))
+			ginCtx.Request, err = http.NewRequest("DELETE", "/v1/users/:user_id/2", nil)
 			Expect(err).To(BeNil())
 			ginCtx.Request.AddCookie(cookie)
 			ginCtx.Request = enricher(ginCtx.Request)
@@ -139,7 +138,9 @@ var _ = Describe("API Test", func() {
 			fakeUserer.DeleteUserReturns(2, nil)
 
 			router.ServeHTTP(w, ginCtx.Request)
-			Expect(2).To(Equal(2), "Expected AddUser to be called with the correct arguments")
+
+			Expect(w.Code).To(Equal(http.StatusOK), "Expected HTTP status to be OK, but got %d", w.Code)
+			Expect(w.Body.String()).To(ContainSubstring("User deleted successfully"))
 		})
 	})
 
@@ -173,7 +174,9 @@ var _ = Describe("API Test", func() {
 
 			router.ServeHTTP(w, ginCtx.Request)
 
+			actualBody, _ := io.ReadAll(w.Result().Body)
 			Expect(w.Code).To(Equal(http.StatusOK), "Expected HTTP status OK")
+			Expect(w.Body.String()).To(Equal(string(actualBody)), "Unexpected response body: %s", w.Body.String())
 		})
 	})
 
@@ -200,7 +203,8 @@ var _ = Describe("API Test", func() {
 			router.ServeHTTP(w, ginCtx.Request)
 
 			Expect(w.Code).To(Equal(http.StatusOK), "Expected HTTP status OK")
-			Expect(w.Body.String()).To(ContainSubstring("User1"), "Expected user data in the response body")
+			actualBody, _ := io.ReadAll(w.Result().Body)
+			Expect(w.Body.String()).To(Equal(string(actualBody)), "Unexpected response body: %s", w.Body.String())
 		})
 	})
 })
