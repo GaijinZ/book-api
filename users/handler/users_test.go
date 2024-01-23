@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"library/pkg/middleware"
 	"time"
 
@@ -97,15 +98,36 @@ var _ = Describe("API Test", func() {
 		})
 	})
 
+	Describe("UpdateUser", func() {
+		It("should update a user", func() {
+			body, err := json.Marshal(request)
+			Expect(err).To(BeNil())
+
+			ginCtx.Request, err = http.NewRequest("PUT", "/v1/users/:user_id", bytes.NewBuffer(body))
+			Expect(err).To(BeNil())
+			ginCtx.Request.AddCookie(cookie)
+			ginCtx.Request = enricher(ginCtx.Request)
+
+			var response = &models.UserResponse{
+				ID:        1,
+				Firstname: "tmostowasherenot",
+				Lastname:  "tmostowasherenot",
+				Email:     "tmostowashere@tmostowashere.com",
+				BookList:  nil,
+				Role:      "superuser",
+			}
+			fakeUserer.UpdateUserReturns(response, nil)
+
+			router.ServeHTTP(w, ginCtx.Request)
+
+			actualBody, _ := io.ReadAll(w.Result().Body)
+			Expect(w.Code).To(Equal(http.StatusCreated), "Expected HTTP status to be OK, but got %d", w.Code)
+			Expect(w.Body.String()).To(Equal(string(actualBody)), "Unexpected response body: %s", w.Body.String())
+		})
+	})
+
 	Describe("DeleteUser", func() {
 		It("should delete a user successfully", func() {
-			request := models.User{
-				ID:       1,
-				Email:    "tmostowashere@tmostowashere.com",
-				Password: "tmostowashere",
-				Role:     "superuser",
-			}
-
 			body, err := json.Marshal(request)
 			Expect(err).To(BeNil())
 

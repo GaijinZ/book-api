@@ -3,16 +3,14 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"library/pkg"
 	"library/pkg/middleware"
 	"library/pkg/utils"
 	"library/users/models"
 	"library/users/repository"
 	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type Userer interface {
@@ -82,25 +80,18 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 	var userResponse *models.UserResponse
-	var err error
 
 	log := utils.GetLogger(h.ctx)
 
-	if err = c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&user); err != nil {
 		log.Errorf("JSON binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user.ID, err = strconv.Atoi(c.Param("user_id"))
-	if err != nil {
-		log.Errorf("error converting user_id")
-		errorMessage := fmt.Errorf("error converting user_id")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
-		return
-	}
+	user.ID = c.GetInt("userID")
 
-	userResponse, err = h.userRepository.UpdateUser(&user)
+	userResponse, err := h.userRepository.UpdateUser(&user)
 	if err != nil {
 		log.Errorf("Error updating user in the repository: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -117,13 +108,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	log := utils.GetLogger(h.ctx)
 
-	userID, err := strconv.Atoi(c.Param("user_id"))
-	if err != nil {
-		log.Errorf("error converting user_id")
-		errorMessage := fmt.Errorf("error converting user_id")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
-		return
-	}
+	userID := c.GetInt("userID")
 
 	user, err = h.userRepository.GetUser(userID)
 	if err != nil {
@@ -174,13 +159,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	id, err := strconv.Atoi(c.Param("delete_id"))
-	if err != nil {
-		log.Errorf("error converting delete_id")
-		errorMessage := fmt.Errorf("error converting delete_id")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
-		return
-	}
+	id := c.GetInt("deleteID")
 
 	deletedID, err := h.userRepository.DeleteUser(id)
 	if err != nil {
