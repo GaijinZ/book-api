@@ -44,9 +44,9 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 		return
 	}
 
-	err = pkg.CheckDate(log, &book)
+	err = pkg.CheckPublishedDate(log, &book)
 	if err != nil {
-		log.Errorf("Cannot add a book with a future publication date: %v", err)
+		log.Errorf("checking published date error: %v", err)
 		errorMessage := "Cannot add a book with a future publication date"
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 		return
@@ -59,6 +59,7 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 		return
 	}
 
+	log.Infof("Book added successfully: %v", &book)
 	c.JSON(http.StatusCreated, gin.H{"Book added successfully": bookID})
 }
 
@@ -74,8 +75,9 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	err := pkg.CheckDate(log, &book)
+	err := pkg.CheckPublishedDate(log, &book)
 	if err != nil {
+		log.Errorf("checking published date error: %v", err)
 		errorMessage := "Cannot add a book with a future publication date"
 		c.JSON(http.StatusBadRequest, gin.H{"error": errorMessage})
 		return
@@ -86,10 +88,12 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 
 	bookResponse, err = b.bookRepository.UpdateBook(&book)
 	if err != nil {
+		log.Errorf("Update book repository error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	log.Infof("Book updated successfully: %v", &book)
 	c.JSON(http.StatusCreated, gin.H{"Book updated successfully": bookResponse})
 }
 
