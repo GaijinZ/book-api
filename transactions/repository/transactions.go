@@ -3,15 +3,17 @@ package repository
 import (
 	"context"
 	"encoding/json"
+
 	"library/pkg/logger"
 	"library/pkg/postgres"
 	"library/pkg/utils"
 	"library/transactions/models"
+
 	"time"
 )
 
 type TransactionerRepository interface {
-	BuyBook(userID, bookID, quantity int) error
+	BuyBook(userID, bookID, quantity int) (int, error)
 	TransactionHistory(userID int) ([]models.UserTransactionResponse, error)
 }
 
@@ -27,7 +29,7 @@ func NewTransactionRepository(ctx context.Context, db postgres.DB) Transactioner
 	}
 }
 
-func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
+func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) (int, error) {
 	log := utils.GetLogger(t.ctx)
 
 	userTransaction := &models.UserTransactionRequest{
@@ -41,58 +43,61 @@ func (t *TransactionRepository) BuyBook(userID, bookID, quantity int) error {
 	tx, err := t.DB.DB.Begin()
 	if err != nil {
 		log.Errorf("Failed to begin transaction: %v", err)
-		return err
+		return 0, err
 	}
 
 	availability, err := isAvailable(log, userTransaction.BookID, t.DB)
 	if err != nil {
-		return err
+		log.Errorf("Failed to check book availbility: %v", err)
+		return 0, err
 	}
 
 	if !availability {
-		log.Errorf("Book is not available")
-		return err
+		log.Errorf("Book is not available, book id: %v", bookID)
+		return 0, err
 	}
 
 	if err = availableQuantity(log, userTransaction, t.DB); err != nil {
 		log.Errorf("Failed to check available quantity of book")
-		return err
+		return 0, err
 	}
 
 	userTransaction.BookList, err = getBookDetails(log, userTransaction, t.DB)
 	if err != nil {
 		log.Errorf("Failed to get book details: %v", err)
-		return err
+		return 0, err
 	}
 
 	changed, err := getTransactionData(log, userTransaction, t.DB)
 	if err != nil {
 		log.Errorf("Failed to get transaction data")
 		tx.Rollback()
-		return err
+		return 0, err
 	}
 
 	if changed == true {
-		return nil
+		return 0, nil
 	}
 
 	newBookList, err := json.Marshal(userTransaction.BookList)
 	if err != nil {
 		log.Errorf("Failed to marshal updated book list: %v", err)
-		return err
+		return 0, err
 	}
 
 	if err = updateUserTransactions(log, userTransaction, newBookList, t.DB); err != nil {
-		return err
+		log.Errorf("Failed to updated user transactions: %v", err)
+		return 0, err
 	}
+	log.Infof("user transactions updated")
 
 	err = tx.Commit()
 	if err != nil {
 		log.Errorf("Failed to commit transaction: %v", err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return bookID, nil
 }
 
 func (t *TransactionRepository) TransactionHistory(userID int) ([]models.UserTransactionResponse, error) {

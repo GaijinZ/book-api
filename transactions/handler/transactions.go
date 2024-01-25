@@ -2,11 +2,13 @@ package handler
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
+
+	"library/pkg/utils"
 	"library/transactions/models"
 	"library/transactions/repository"
 	"net/http"
-	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type TransactionerHandler interface {
@@ -28,37 +30,39 @@ func NewTransactionHandler(ctx context.Context, transactionHandler repository.Tr
 
 func (t *TransactionHandler) BuyBook(c *gin.Context) {
 	transaction := models.TransactionResponse{}
+	log := utils.GetLogger(t.ctx)
 
 	userID := c.GetInt("userID")
-
-	bookID, err := strconv.Atoi(c.Param("book_id"))
-	if err != nil {
-		errorMessage := "Wrong book ID: " + err.Error()
-		c.JSON(http.StatusNotFound, gin.H{"error": errorMessage})
-		return
-	}
+	bookID := c.GetInt("bookID")
 
 	if err := c.ShouldBindJSON(&transaction); err != nil {
+		log.Errorf("JSON binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err = t.transactionRepository.BuyBook(userID, bookID, transaction.Quantity); err != nil {
+	id, err := t.transactionRepository.BuyBook(userID, bookID, transaction.Quantity)
+	if err != nil {
+		log.Errorf("Transaction repository error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	log.Infof("Transaction successful: %v", id)
 	c.JSON(http.StatusCreated, gin.H{"Book added successfully": "book"})
 }
 
 func (t *TransactionHandler) TransactionHistory(c *gin.Context) {
+	log := utils.GetLogger(t.ctx)
 	userID := c.GetInt("userID")
 
 	transactions, err := t.transactionRepository.TransactionHistory(userID)
 	if err != nil {
+		log.Errorf("Transaction repository error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	log.Infof("Transaction history acuired for user: %v", userID)
 	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }

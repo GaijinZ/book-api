@@ -26,3 +26,4 @@ run_gateway:
 counterfeiter:
 	counterfeiter users/repository UsererRepository
 	counterfeiter books/repository BookerRepository
+	counterfeiter transactions/repository TransactionerRepository
