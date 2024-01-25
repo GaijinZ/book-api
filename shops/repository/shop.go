@@ -126,7 +126,7 @@ func ConvertIndustryIdentifiers(identifiers []models.ISBN) string {
 		result = append(result, id.Identifier)
 	}
 
-	return result[0]
+	return ""
 }
 
 func ParseDateString(log logger.Logger, publishedDate string) (string, error) {
