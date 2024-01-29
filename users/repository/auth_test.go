@@ -22,7 +22,7 @@ func TestAuthRepository_Login(t *testing.T) {
 	newAuthRepo := repository.NewAuthRepository(ctx, *fakeDB)
 	testUser := &models.User{}
 	testAuth := &models.Authentication{Email: "test@example.com"}
-	
+
 	mock := fakeDB.GetMock()
 
 	mock.ExpectQuery(repository.GetUserByEmail).
