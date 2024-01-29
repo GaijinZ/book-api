@@ -52,7 +52,7 @@ var _ = Describe("API Test", func() {
 
 	Describe("AddUser", func() {
 		It("should add a user successfully", func() {
-			mock.ExpectQuery(repository.GetUserByEmail).
+			mock.ExpectQuery(repository.CheckUserByEmail).
 				WithArgs(user.Email).
 				WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 
@@ -66,7 +66,7 @@ var _ = Describe("API Test", func() {
 		})
 
 		It("should return an error if database query fails", func() {
-			mock.ExpectQuery(repository.GetUserByEmail).
+			mock.ExpectQuery(repository.CheckUserByEmail).
 				WithArgs(user.Email).
 				WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 
@@ -80,7 +80,7 @@ var _ = Describe("API Test", func() {
 		})
 
 		It("should return an error if user email already exists", func() {
-			mock.ExpectQuery(repository.GetUserByEmail).
+			mock.ExpectQuery(repository.CheckUserByEmail).
 				WithArgs(user.Email).
 				WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
@@ -90,7 +90,7 @@ var _ = Describe("API Test", func() {
 		})
 
 		It("should return an error if arguments do not match", func() {
-			mock.ExpectQuery(repository.GetUserByEmail).
+			mock.ExpectQuery(repository.CheckUserByEmail).
 				WithArgs(user.Email).
 				WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
 

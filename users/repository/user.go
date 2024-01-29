@@ -173,7 +173,7 @@ func (r *UserRepository) DeleteUser(id int) (int, error) {
 
 func checkUserEmailExist(log logger.Logger, email string, db postgres.DB) (bool, error) {
 	var exists bool
-	err := db.DB.QueryRow(GetUserByEmail, email).Scan(&exists)
+	err := db.DB.QueryRow(CheckUserByEmail, email).Scan(&exists)
 	if err != nil {
 		log.Errorf("Checking user email error %s: %s", email, err)
 		return false, err

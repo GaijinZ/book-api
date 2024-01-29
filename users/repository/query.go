@@ -1,8 +1,9 @@
 package repository
 
 const (
-	GetUserByEmail = "SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)"
-	InsertUser     = `
+	GetUserByEmail   = "SELECT id, firstname, lastname, password, email, role FROM users WHERE email=$1"
+	CheckUserByEmail = "SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)"
+	InsertUser       = `
 					INSERT INTO users (firstname, lastname, email, password, role) 
 					VALUES ($1, $2, $3, $4, $5) 
 					`

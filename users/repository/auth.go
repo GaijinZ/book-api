@@ -26,9 +26,8 @@ func NewAuthRepository(ctx context.Context, db postgres.DB) AutherRepository {
 func (u *AuthRepository) Login(user *models.User, auth *models.Authentication) error {
 	log := utils.GetLogger(u.ctx)
 
-	query := "SELECT id, firstname, lastname, password, email, role FROM users WHERE email=$1"
 	err := u.db.DB.QueryRow(
-		query,
+		GetUserByEmail,
 		auth.Email,
 	).Scan(&user.ID, &user.Firstname, &user.Lastname, &user.Password, &user.Email, &user.Role)
 	if err != nil {
