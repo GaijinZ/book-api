@@ -15,7 +15,6 @@ type UsererRepository interface {
 	GetUser(id int) (*models.UserResponse, error)
 	GetAllUsers() ([]models.UserResponse, error)
 	DeleteUser(id int) (int, error)
-	GetDBPool() postgres.DB
 }
 
 type UserRepository struct {
@@ -28,10 +27,6 @@ func NewUserRepository(ctx context.Context, db postgres.DB) UsererRepository {
 		ctx: ctx,
 		DB:  db,
 	}
-}
-
-func (r *UserRepository) GetDBPool() postgres.DB {
-	return r.DB
 }
 
 func (r *UserRepository) AddUser(user *models.User) (int, error) {
@@ -48,26 +43,21 @@ func (r *UserRepository) AddUser(user *models.User) (int, error) {
 		return 0, errors.New("user email already exists")
 	}
 
-	var lastInsertedID int
-	insertQuery := `
-INSERT INTO users (firstname, lastname, email, password, role) 
-VALUES ($1, $2, $3, $4, $5) 
-RETURNING id
-`
-	err = r.DB.DB.QueryRow(
-		insertQuery,
+	row, err := r.DB.DB.Exec(
+		InsertUser,
 		user.Firstname,
 		user.Lastname,
 		user.Email,
 		user.Password,
 		user.Role,
-	).Scan(&lastInsertedID)
+	)
 	if err != nil {
 		log.Errorf("Failed to add user to database: %v", err)
 		return 0, err
 	}
+	lastInsertedID, _ := row.LastInsertId()
 
-	return lastInsertedID, nil
+	return int(lastInsertedID), nil
 }
 
 func (r *UserRepository) UpdateUser(user *models.User) (*models.UserResponse, error) {
@@ -83,9 +73,8 @@ func (r *UserRepository) UpdateUser(user *models.User) (*models.UserResponse, er
 		Role:      user.Role,
 	}
 
-	updateQuery := "UPDATE users SET firstname=$1, lastname=$2, email=$3, role=$4 WHERE id=$5"
 	result, err := r.DB.DB.Exec(
-		updateQuery,
+		UpdateUser,
 		userResponse.Firstname,
 		userResponse.Lastname,
 		userResponse.Email,
@@ -116,9 +105,8 @@ func (r *UserRepository) GetUser(id int) (*models.UserResponse, error) {
 
 	log := utils.GetLogger(r.ctx)
 
-	getQuery := "SELECT firstname, lastname, email, role FROM users WHERE id=$1"
 	err := r.DB.DB.QueryRow(
-		getQuery,
+		GetUserByID,
 		id,
 	).Scan(&userResponse.Firstname, &userResponse.Lastname, &userResponse.Email, &userResponse.Role)
 	if err != nil {
@@ -133,8 +121,7 @@ func (r *UserRepository) GetAllUsers() ([]models.UserResponse, error) {
 	var users []models.UserResponse
 	log := utils.GetLogger(r.ctx)
 
-	getAllQuery := "SELECT firstname, lastname, email, role FROM users ORDER BY id"
-	rows, err := r.DB.DB.Query(getAllQuery)
+	rows, err := r.DB.DB.Query(GetUsers)
 	if err != nil {
 		log.Errorf("QueryRows failed: %v", err)
 		return users, err
@@ -175,8 +162,7 @@ func (r *UserRepository) DeleteUser(id int) (int, error) {
 		return 0, errors.New("user ID doesn't exists")
 	}
 
-	query := "DELETE FROM users WHERE id=$1"
-	_, err = r.DB.DB.Exec(query, id)
+	_, err = r.DB.DB.Exec(DeleteUser, id)
 	if err != nil {
 		log.Errorf("User delete error ID %d: %s", id, err)
 		return 0, err
@@ -186,10 +172,8 @@ func (r *UserRepository) DeleteUser(id int) (int, error) {
 }
 
 func checkUserEmailExist(log logger.Logger, email string, db postgres.DB) (bool, error) {
-	query := "SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)"
-
 	var exists bool
-	err := db.DB.QueryRow(query, email).Scan(&exists)
+	err := db.DB.QueryRow(GetUserByEmail, email).Scan(&exists)
 	if err != nil {
 		log.Errorf("Checking user email error %s: %s", email, err)
 		return false, err

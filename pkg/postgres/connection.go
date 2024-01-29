@@ -6,6 +6,8 @@ import (
 	"library/pkg/utils"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
+
 	_ "github.com/lib/pq"
 )
 
@@ -18,7 +20,8 @@ type DBConfig struct {
 }
 
 type DB struct {
-	DB *sql.DB
+	DB   *sql.DB
+	mock sqlmock.Sqlmock
 }
 
 func NewDB(ctx context.Context, configDB DBConfig) (*DB, error) {
@@ -38,6 +41,10 @@ func NewDB(ctx context.Context, configDB DBConfig) (*DB, error) {
 	return &DB{DB: db}, nil
 }
 
+func (d *DB) GetDB() *sql.DB {
+	return d.DB
+}
+
 func (d *DB) Ping() error {
 	return d.DB.Ping()
 }
@@ -46,6 +53,6 @@ func (d *DB) Close() error {
 	return d.DB.Close()
 }
 
-func (d *DB) GetConnection(ctx context.Context) (*sql.Conn, error) {
+func (d *DB) Conn(ctx context.Context) (*sql.Conn, error) {
 	return d.DB.Conn(ctx)
 }
