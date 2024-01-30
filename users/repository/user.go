@@ -151,7 +151,7 @@ func (r *UserRepository) GetAllUsers() ([]models.UserResponse, error) {
 func (r *UserRepository) DeleteUser(id int) (int, error) {
 	log := utils.GetLogger(r.ctx)
 
-	exists, err := postgres.CheckIDExists("users", id, r.DB)
+	exists, err := postgres.CheckIDExists("users", id, r.DB.GetDB())
 	if err != nil {
 		log.Errorf("Checking user ID error: %v", err)
 		return 0, err
