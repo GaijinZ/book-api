@@ -38,14 +38,14 @@ func (b *BookRepository) GetOrCreateAuthor(authorName string) (models.AuthorResp
 
 	err := b.DB.DB.QueryRow(SelectAuthor, authorName).Scan(&author.ID)
 	if err != nil {
-		row, err := b.DB.DB.Exec(InsertAuthor, authorName)
+		var lastInsertedID int
+		err = b.DB.DB.QueryRow(InsertAuthor, authorName).Scan(&lastInsertedID)
 		if err != nil {
 			log.Errorf("Failed to perform an insert query on author table: %v", err)
 			return author, err
 		}
 
-		lastInsertedID, _ := row.LastInsertId()
-		author.ID = int(lastInsertedID)
+		author.ID = lastInsertedID
 	}
 
 	author.Name = authorName
@@ -87,7 +87,8 @@ func (b *BookRepository) AddBook(book *models.BookRequest) (int, error) {
 
 	bookResponse.Author.ID = author.ID
 
-	row, err := b.DB.DB.Exec(
+	var lastInsertedID int
+	err = b.DB.DB.QueryRow(
 		InsertBook,
 		bookResponse.Name,
 		bookResponse.DatePublished,
@@ -95,15 +96,13 @@ func (b *BookRepository) AddBook(book *models.BookRequest) (int, error) {
 		bookResponse.PageCount,
 		bookResponse.UserID.ID,
 		author.ID,
-	)
+	).Scan(&lastInsertedID)
 	if err != nil {
 		log.Errorf("Failed to perform an insert query on user book table: %d", err)
 		return 0, err
 	}
 
-	lastInsertedID, _ := row.LastInsertId()
-
-	return int(lastInsertedID), nil
+	return lastInsertedID, nil
 }
 
 func (b *BookRepository) UpdateBook(book *models.BookRequest) (*models.BookResponse, error) {
@@ -221,7 +220,7 @@ func (b *BookRepository) GetAllBooks() ([]models.BookResponse, error) {
 			log.Errorf("Failed to scan rows: %d", err)
 			return books, err
 		}
-		
+
 		books = append(books, book)
 	}
 
@@ -268,7 +267,7 @@ func isAssigned(log logger.Logger, bookID, userID int, db *sql.DB) (bool, error)
 	var exists bool
 	err := db.QueryRow(IsAssigned, bookID, userID).Scan(&exists)
 	if err != nil {
-		log.Errorf("error checking book assignment: %w", err)
+		log.Errorf("error checking book assignment: %v", err)
 		return false, err
 	}
 
@@ -279,7 +278,7 @@ func validateISBNExists(log logger.Logger, isbn string, db *sql.DB) (bool, error
 	var exists bool
 	err := db.QueryRow(CheckISBN, isbn).Scan(&exists)
 	if err != nil {
-		log.Errorf("error validating ISBN %s: %w", isbn, err)
+		log.Errorf("error validating ISBN %s: %v", isbn, err)
 		return false, err
 	}
 
