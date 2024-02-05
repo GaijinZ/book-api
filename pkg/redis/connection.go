@@ -3,15 +3,16 @@ package redis
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
+	"library/pkg/config"
 )
 
 type Client struct {
 	Client *redis.Client
 }
 
-func NewRedis() (*Client, error) {
+func NewRedis(cfg config.GlobalEnv) (*Client, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "localhost:" + cfg.RedisPort,
 		Password: "",
 		DB:       0,
 	})

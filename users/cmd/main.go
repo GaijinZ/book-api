@@ -49,13 +49,13 @@ func main() {
 	}
 	defer db.Close()
 
-	redisClient, err := redis.NewRedis()
+	redisClient, err := redis.NewRedis(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 	defer redisClient.Close()
 
-	rmq, err := rabbitMQ.NewConn()
+	rmq, err := rabbitMQ.NewConn(cfg)
 	if err != nil {
 		log.Fatalf("Failed to create RabbitMQ instance: %v", err)
 	}

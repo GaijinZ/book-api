@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/rabbitmq/amqp091-go"
+	"library/pkg/config"
 	"library/pkg/utils"
 	"log"
 )
@@ -13,8 +14,8 @@ type RabbitMQ struct {
 	Ch   *amqp091.Channel
 }
 
-func NewConn() (*RabbitMQ, error) {
-	connection, err := amqp091.Dial("amqp://guest:guest@localhost:5672/")
+func NewConn(cfg config.GlobalEnv) (*RabbitMQ, error) {
+	connection, err := amqp091.Dial(cfg.RabbitMQ)
 	if err != nil {
 		fmt.Printf("ERROR: %v", err)
 		panic(err)
