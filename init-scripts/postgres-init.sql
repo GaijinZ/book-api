@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(100) NOT NULL,
   password VARCHAR(200) NOT NULL,
   role VARCHAR(20),
+  activated boolean DEFAULT false,
   UNIQUE (email)
 );
 

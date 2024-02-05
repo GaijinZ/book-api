@@ -13,6 +13,7 @@ type User struct {
 	Email     string `json:"email,omitempty" form:"email" validate:"required,email"`
 	Password  string `json:"password,omitempty" form:"password"`
 	Role      string `json:"role,omitempty" form:"role"`
+	IsActive  bool   `json:"is_active" form:"is_active"`
 }
 
 type UserResponse struct {
@@ -27,12 +28,6 @@ type UserResponse struct {
 type Authentication struct {
 	Email    string `json:"email" form:"email"`
 	Password string `json:"password" form:"password"`
-}
-
-type ActivationMessage struct {
-	Token  string
-	UserID int
-	Email  string
 }
 
 func (u *User) ValidateUser() error {

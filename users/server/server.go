@@ -10,11 +10,12 @@ import (
 func NewRouter(authUser handler.UserAuther, handlerUser handler.Userer) *gin.Engine {
 	router := gin.Default()
 
-	router.POST("/v1/users", handlerUser.AddUser)
-	router.POST("/v1/users/login", authUser.Login)
-	router.POST("/v1/users/logout", authUser.Logout)
-
 	v1 := router.Group("/v1/users")
+
+	v1.POST("", handlerUser.AddUser)
+	v1.GET("/activate", handlerUser.ActivateAccount)
+	v1.POST("/login", authUser.Login)
+	v1.POST("/logout", authUser.Logout)
 
 	v1.PUT("/:user_id",
 		tracing.TraceMiddleware,

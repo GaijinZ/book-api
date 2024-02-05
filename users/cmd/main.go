@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/kelseyhightower/envconfig"
 	"library/pkg/config"
 	"library/pkg/logger"
 	"library/pkg/postgres"
+	"library/pkg/rabbitMQ/rabbitMQ"
+	"library/pkg/redis"
 	"library/pkg/utils"
 	"library/users/handler"
 	"library/users/repository"
@@ -14,6 +15,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 func main() {
@@ -46,7 +49,19 @@ func main() {
 	}
 	defer db.Close()
 
-	userRepository := repository.NewUserRepository(ctx, *db)
+	redisClient, err := redis.NewRedis()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+	defer redisClient.Close()
+
+	rmq, err := rabbitMQ.NewConn()
+	if err != nil {
+		log.Fatalf("Failed to create RabbitMQ instance: %v", err)
+	}
+	defer rmq.Close()
+
+	userRepository := repository.NewUserRepository(ctx, *db, redisClient, rmq)
 	authRepository := repository.NewAuthRepository(ctx, *db)
 	authUser := handler.NewUserAuth(ctx, authRepository)
 	handlerUser := handler.NewUserHandler(ctx, userRepository)

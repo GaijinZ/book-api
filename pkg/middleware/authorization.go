@@ -55,6 +55,7 @@ func GetToken(c *gin.Context) {
 		return
 	}
 
+	c.Set("claims", claims)
 	c.Set("userID", userID)
 	c.Next()
 }

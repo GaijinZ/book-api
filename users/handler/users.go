@@ -2,15 +2,15 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"library/pkg"
-	"library/pkg/middleware"
 	"library/pkg/utils"
 	"library/users/models"
 	"library/users/repository"
 	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type Userer interface {
@@ -19,6 +19,7 @@ type Userer interface {
 	GetUser(c *gin.Context)
 	GetAllUsers(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	ActivateAccount(c *gin.Context)
 }
 
 type UserHandler struct {
@@ -108,9 +109,13 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	log := utils.GetLogger(h.ctx)
 
-	userID := c.GetInt("userID")
+	getUser, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
 
-	user, err = h.userRepository.GetUser(userID)
+	user, err = h.userRepository.GetUser(getUser)
 	if err != nil {
 		log.Errorf("Error getting user from the repository: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -138,28 +143,26 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	log := utils.GetLogger(h.ctx)
 
-	token, err := c.Cookie("token")
-	if err != nil {
-		log.Errorf("Error getting token: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	claims, err := middleware.VerifyJWT(token)
-	if err != nil {
-		log.Errorf("Authorization failed : %v", err)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	if claims.Role != "superuser" {
-		log.Warningf("not enough permissions")
-		errorMessage := fmt.Errorf("not enough permissions")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": errorMessage})
-		return
-	}
-
 	id := c.GetInt("deleteID")
+	claims, exists := c.Get("claims")
+	if !exists {
+		log.Errorf("Could not get claims from context")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "could not get claims from context"})
+		return
+	}
+
+	claimsData, ok := claims.(*models.Claims)
+	if !ok {
+		log.Errorf("Failed to convert claims")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "failed to convert claims"})
+		return
+	}
+
+	if claimsData.Role != "superuser" {
+		log.Warningf("not enough permissions")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not enough permissions"})
+		return
+	}
 
 	deletedID, err := h.userRepository.DeleteUser(id)
 	if err != nil {
@@ -170,4 +173,26 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	log.Infof("User deleted successfully, id: %v", deletedID)
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+func (h *UserHandler) ActivateAccount(c *gin.Context) {
+	log := utils.GetLogger(h.ctx)
+	userIDStr := c.Query("userID")
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		log.Errorf("Invalid user ID: %v", userIDStr)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	id, err := h.userRepository.ActivateUser(userID)
+	if err != nil {
+		log.Errorf("Failed to activate user, id: %v", id)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to activate user"})
+		return
+	}
+
+	log.Infof("User account has been activated: %v", id)
+	c.JSON(http.StatusOK, gin.H{"message": "User account activated"})
 }
