@@ -5,13 +5,16 @@
 * [Run app](#run)
 
 ## General info
-Bookapi app is use to add, update, delete and view all books by user in Postgres database.
+Book API app is used to add, update, delete and view all books by user in Postgres database.
 	
 ## Technologies
 Project is created with:
 * Golang 1.20
 * Docker
 * Postgres
+* Redis
+* RabbitMQ
+* Logrus
 
 ## Run app
 * Vagrant
