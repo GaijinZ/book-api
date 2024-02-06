@@ -32,7 +32,7 @@ func (t *TransactionHandler) BuyBook(c *gin.Context) {
 	transaction := models.TransactionResponse{}
 	log := utils.GetLogger(t.ctx)
 
-	userID := c.GetInt("userID")
+	userID := 1
 	bookID := c.GetInt("bookID")
 
 	if err := c.ShouldBindJSON(&transaction); err != nil {

@@ -6,6 +6,8 @@ import (
 	"library/pkg/config"
 	"library/pkg/logger"
 	"library/pkg/postgres"
+	"library/pkg/rabbitMQ/rabbitMQ"
+	"library/pkg/redis"
 	"library/pkg/utils"
 	"library/transactions/handler"
 	"library/transactions/repository"
@@ -24,7 +26,7 @@ func main() {
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+
 	ctx = context.WithValue(ctx, "logger", logger.NewLogger(2))
 	log := utils.GetLogger(ctx)
 
@@ -44,14 +46,30 @@ func main() {
 	if err != nil {
 		log.Errorf("Failed to configure db connection: %v", err)
 	}
-	defer db.Close()
 
-	transactionsRepository := repository.NewTransactionRepository(ctx, *db)
+	redisClient, err := redis.NewRedis(cfg)
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+
+	rmq, err := rabbitMQ.NewConn(cfg)
+	if err != nil {
+		log.Fatalf("Failed to create RabbitMQ instance: %v", err)
+	}
+
+	transactionsRepository := repository.NewTransactionRepository(ctx, *db, redisClient, rmq)
 	transactionsHandler := handler.NewTransactionHandler(ctx, transactionsRepository)
 
 	router := server.NewRouter(transactionsHandler)
 
 	go router.Run(":" + cfg.TransactionsServerPort)
+
+	defer func() {
+		cancel()
+		db.Close()
+		redisClient.Close()
+		rmq.Close()
+	}()
 
 	select {
 	case sig := <-interrupt:
