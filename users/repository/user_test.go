@@ -4,10 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kelseyhightower/envconfig"
+	"library/pkg/config"
 	"library/pkg/logger"
 	"library/pkg/postgres"
+	"library/pkg/rabbitMQ/rabbitMQ"
+	"library/pkg/redis"
 	"library/users/models"
 	"library/users/repository"
+	"log"
 
 	"github.com/DATA-DOG/go-sqlmock"
 
@@ -17,6 +22,7 @@ import (
 
 var _ = Describe("API Test", func() {
 	var (
+		cfg          config.GlobalEnv
 		newUserRepo  repository.UsererRepository
 		user         *models.User
 		userResponse *models.UserResponse
@@ -30,10 +36,15 @@ var _ = Describe("API Test", func() {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		ctx = context.WithValue(ctx, "logger", logger.NewLogger(2))
+		if err := envconfig.Process("bookapi", &cfg); err != nil {
+			log.Fatalf(err.Error())
+		}
 
 		fakeDB, _ = postgres.NewFakeDB(ctx)
+		redis, _ := redis.NewRedis(cfg)
+		rmq, _ := rabbitMQ.NewConn(cfg)
 
-		newUserRepo = repository.NewUserRepository(ctx, *fakeDB)
+		newUserRepo = repository.NewUserRepository(ctx, *fakeDB, redis, rmq)
 
 		user = &models.User{
 			Firstname: "tmosto",

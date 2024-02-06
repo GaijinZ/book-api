@@ -25,5 +25,7 @@ run_gateway:
 
 counterfeiter:
 	counterfeiter users/repository UsererRepository
+	counterfeiter users/repository AutherRepository
 	counterfeiter books/repository BookerRepository
 	counterfeiter transactions/repository TransactionerRepository
+	counterfeiter pkg/redis RedisClient

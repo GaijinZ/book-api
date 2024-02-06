@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/kelseyhightower/envconfig"
 	"io"
+	"library/pkg/config"
 	"library/pkg/middleware"
+	"library/pkg/rabbitMQ/rabbitMQ"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +28,7 @@ import (
 
 var _ = Describe("API Test", func() {
 	var (
+		cfg             config.GlobalEnv
 		w               *httptest.ResponseRecorder
 		ginCtx          *gin.Context
 		fakeAuther      *repositoryfakes.FakeAutherRepository
@@ -42,6 +47,15 @@ var _ = Describe("API Test", func() {
 
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, "logger", logger.NewLogger(2))
+		if err := envconfig.Process("bookapi", &cfg); err != nil {
+			log.Fatalf(err.Error())
+		}
+
+		rmq, err := rabbitMQ.NewConn(cfg)
+		if err != nil {
+			log.Fatalf("Failed to create RabbitMQ instance: %v", err)
+		}
+		defer rmq.Close()
 
 		fakeAuther = &repositoryfakes.FakeAutherRepository{}
 		fakeUserer = &repositoryfakes.FakeUsererRepository{}
