@@ -30,6 +30,20 @@ func NewBookHandler(ctx context.Context, booker repository.BookerRepository) Boo
 	}
 }
 
+// AddBook adds a new book to the database.
+//
+//	@Summary		Add a new book
+//	@Description	Adds a new book to the database.
+//	@Tags			books
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string										true	"JWT Token"
+//	@Param			book			body		models.BookRequest									true	"Book object to be added"
+//	@Success		201
+//	@Failure		400
+//	@Failure		401
+//	@Failure		500
+//	@Router			/v1/books [post]
 func (b *BookHandler) AddBook(c *gin.Context) {
 	var book models.BookRequest
 	var err error
@@ -63,6 +77,20 @@ func (b *BookHandler) AddBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"Book added successfully": bookID})
 }
 
+// UpdateBook updates an existing book in the database.
+//
+//	@Summary		Update an existing book
+//	@Description	Updates an existing book in the database.
+//	@Tags			books
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string													true	"JWT Token"
+//	@Param			book			body		models.BookRequest												true	"Updated book object"
+//	@Success		201
+//	@Failure		400
+//	@Failure		401
+//	@Failure		500
+//	@Router			/v1/books [put]
 func (b *BookHandler) UpdateBook(c *gin.Context) {
 	var book models.BookRequest
 	var bookResponse *models.BookResponse
@@ -97,6 +125,18 @@ func (b *BookHandler) UpdateBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"Book updated successfully": bookResponse})
 }
 
+// GetBook retrieves a book by its ID from the database.
+//
+//	@Summary		Retrieve a book by ID
+//	@Description	Retrieves a book by its ID from the database.
+//	@Tags			books
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string								true	"JWT Token"
+//	@Param			book_id			path		int									true	"Book ID"
+//	@Success		200
+//	@Failure		500
+//	@Router			/v1/books/{book_id} [get]
 func (b *BookHandler) GetBook(c *gin.Context) {
 	var book *models.BookResponse
 	var err error
@@ -116,6 +156,17 @@ func (b *BookHandler) GetBook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"book": book})
 }
 
+// GetAllBooks retrieves all books from the database.
+//
+//	@Summary		Retrieve all books
+//	@Description	Retrieves all books from the database.
+//	@Tags			books
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string					true	"JWT Token"
+//	@Success		200
+//	@Failure		400
+//	@Router			/v1/books [get]
 func (b *BookHandler) GetAllBooks(c *gin.Context) {
 	log := utils.GetLogger(b.ctx)
 
@@ -130,6 +181,19 @@ func (b *BookHandler) GetAllBooks(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"books": books})
 }
 
+// DeleteBook deletes a book from the database.
+//
+//	@Summary		Delete a book
+//	@Description	Deletes a book from the database.
+//	@Tags			books
+//	@Accept			json
+//	@Produce		json
+//	@Param			bookID			path		int							true	"Book ID to delete"
+//	@Param			Authorization	header		string						true	"JWT Token"
+//	@Success		200
+//	@Failure		400
+//	@Failure		500
+//	@Router			/v1/books/{bookID} [delete]
 func (b *BookHandler) DeleteBook(c *gin.Context) {
 	log := utils.GetLogger(b.ctx)
 

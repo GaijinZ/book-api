@@ -1,0 +1,59 @@
+definitions:
+  models.TransactionResponse:
+    description: Represents a transaction response
+    properties:
+      amount:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/transactions/buy-book/{bookID}:
+    post:
+      consumes:
+      - application/json
+      description: Buy a book with the provided transaction data
+      parameters:
+      - description: Book ID
+        in: path
+        name: bookID
+        required: true
+        type: integer
+      - description: Transaction data
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/models.TransactionResponse'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Buy a book
+  /v1/transactions/history/{userID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the transaction history for the specified user
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+      summary: Get transaction history
+swagger: "2.0"

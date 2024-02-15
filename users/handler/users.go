@@ -34,6 +34,18 @@ func NewUserHandler(ctx context.Context, userRepository repository.UsererReposit
 	}
 }
 
+// AddUser creates a new user.
+//
+//	@Summary		Create a new user
+//	@Description	Creates a new user with the provided data
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body		models.User										true	"User object to be created"
+//	@Success		201
+//	@Failure		400
+//	@Failure		422
+//	@Failure		500
+//	@Router			/v1/users [post]
 func (h *UserHandler) AddUser(c *gin.Context) {
 	var validate = validator.New()
 	var user models.User
@@ -78,6 +90,18 @@ func (h *UserHandler) AddUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User added successfully"})
 }
 
+// UpdateUser updates a user data.
+//
+//	@Summary		Updates a user data
+//	@Description	Updates a user with the provided data
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int												true	"User ID"
+//	@Param			user	body		models.User											true	"Updated user object"
+//	@Success		201
+//	@Failure		400
+//	@Failure		500
+//	@Router			/users/{userID} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 	var userResponse *models.UserResponse
@@ -103,6 +127,18 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"User updated successfully": userResponse})
 }
 
+// GetUser retrieves user details by ID.
+//
+//	@Summary		Get user details
+//	@Description	Retrieves user details by the provided ID
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			user_id	path		int										true	"User ID"
+//	@Success		200
+//	@Failure		404
+//	@Failure		500
+//	@Router			/v1/users/{user_id} [get]
 func (h *UserHandler) GetUser(c *gin.Context) {
 	var user *models.UserResponse
 	var err error
@@ -126,6 +162,16 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
+// GetAllUsers retrieves all users.
+//
+//	@Summary		Get all users
+//	@Description	Retrieves all users
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Success		200
+//	@Failure		400
+//	@Router			/v1/users [get]
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	log := utils.GetLogger(h.ctx)
 
@@ -140,6 +186,19 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"users": users})
 }
 
+// DeleteUser deletes a user.
+//
+//	@Summary		Delete a user
+//	@Description	Deletes a user
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			deleteID	path		int												true	"User ID to delete"
+//	@Param			delete_id	path		int												true	"Delete ID to authorize"
+//	@Success		200
+//	@Failure		400
+//	@Failure		401
+//	@Router			/v1/users/{user_id}/{delete_id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	log := utils.GetLogger(h.ctx)
 
@@ -175,6 +234,17 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
+// ActivateAccount activates a user account.
+//
+//	@Summary		Activate a user account
+//	@Description	Activates a user account
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	query		int											true	"User ID to activate"
+//	@Success		200
+//	@Failure		400
+//	@Failure		500
+//	@Router			/v1/users/activate [get]
 func (h *UserHandler) ActivateAccount(c *gin.Context) {
 	log := utils.GetLogger(h.ctx)
 	userIDStr := c.Query("userID")

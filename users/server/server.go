@@ -2,6 +2,8 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"library/pkg/middleware"
 	"library/pkg/tracing"
 	"library/users/handler"
@@ -11,6 +13,11 @@ func NewRouter(authUser handler.UserAuther, handlerUser handler.Userer) *gin.Eng
 	router := gin.Default()
 
 	v1 := router.Group("/v1/users")
+
+	v1.GET("/docs/*any",
+		tracing.TraceMiddleware,
+		ginSwagger.WrapHandler(swaggerFiles.Handler),
+	)
 
 	v1.POST("", handlerUser.AddUser)
 	v1.GET("/activate", handlerUser.ActivateAccount)

@@ -28,6 +28,18 @@ func NewTransactionHandler(ctx context.Context, transactionHandler repository.Tr
 	}
 }
 
+// BuyBook performs a transaction to buy a book.
+//
+//	@Summary		Buy a book
+//	@Description	Buy a book with the provided transaction data
+//	@Accept			json
+//	@Produce		json
+//	@Param			bookID		path		int											true	"Book ID"
+//	@Param			transaction	body		models.TransactionResponse							true	"Transaction data"
+//	@Success		201
+//	@Failure		400
+//	@Failure		500
+//	@Router			/v1/transactions/buy-book/{bookID} [post]
 func (t *TransactionHandler) BuyBook(c *gin.Context) {
 	transaction := models.TransactionResponse{}
 	log := utils.GetLogger(t.ctx)
@@ -52,6 +64,17 @@ func (t *TransactionHandler) BuyBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"Book added successfully": "book"})
 }
 
+// TransactionHistory retrieves the transaction history for a user.
+//
+//	@Summary		Get transaction history
+//	@Description	Retrieves the transaction history for the specified user
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int										true	"User ID"
+//	@Success		200
+//	@Failure		400
+//	@Failure		500
+//	@Router			/v1/transactions/history/{userID} [get]
 func (t *TransactionHandler) TransactionHistory(c *gin.Context) {
 	log := utils.GetLogger(t.ctx)
 	userID := c.GetInt("userID")

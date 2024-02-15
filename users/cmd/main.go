@@ -19,6 +19,10 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+//	@Title		UserAPI Service
+//	@Version	1.0
+//	@Host		localhost:5000
+// BasePath /v1/users
 func main() {
 	var cfg config.GlobalEnv
 	var ctx context.Context
