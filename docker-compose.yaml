@@ -4,35 +4,17 @@ networks:
   library:
     driver: bridge
 
-services:
-  user_postgres:
-    image: users-postgres
-    restart: always
-    build:
-      context: .
-      dockerfile: users/postgres/Dockerfile
-    container_name: users_postgres
-    networks:
-      - library
-    environment:
-      POSTGRES_USER: tmosto
-      POSTGRES_PASSWORD: tmosto
-      POSTGRES_DB: booksdb
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-q", "-d", "usersdb", "-U", "tmosto" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+volumes:
+  postgres_data:
 
-  book_postgres:
-    image: books-postgres
-    restart: always
+services:
+
+  postgres:
+    image: postgres
+    container_name: postgres
     build:
       context: .
-      dockerfile: books/postgres/Dockerfile
-    container_name: books_postgres
+      dockerfile: pkg/postgres/Dockerfile
     networks:
       - library
     environment:
@@ -46,46 +28,115 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      - library
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    networks:
+      - library
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   users-api:
-    image: userapi-im
+    image: users-im
     container_name: users
     build:
       context: .
       dockerfile: users/cmd/Dockerfile
     depends_on:
-      user_postgres:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - library
     environment:
-      - USERS_SERVER_PORT=5000
-      - POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres/booksdb
+      - BOOKAPI_USERS_SERVER_PORT=5000
+      - BOOKAPI_POSTGRES_BOOKS=postgres://tmosto:tmosto@5432/booksdb
+      - BOOKAPI_RABBITMQ=amqp://guest:guest@rabbitmq:5672/
       - GOPATH=$HOME/go
       - PATH=$PATH:/usr/local/go/bin
-      - SECRET_KEY=mysecretkeyshh
+      - BOOKAPI_SECRET_KEY=mysecretkeyshh
     ports:
       - "5000:5000"
 
   books-api:
-    image: bookapi-im
+    image: books-im
     container_name: books
     build:
       context: .
-      dockerfile: ./books/cmd/Dockerfile
+      dockerfile: books/cmd/Dockerfile
     depends_on:
-      book_postgres:
-        condition: service_healthy
+      - users-api
     networks:
       - library
     environment:
-      - BOOKS_SERVER_PORT=5001
-      - POSTGRES_BOOKS=postgres://tmosto:tmosto@books_postgres/booksdb
+      - BOOKAPI_BOOKS_SERVER_PORT=5001
+      - BOOKAPI_POSTGRES_BOOKS=postgres://tmosto:tmosto@postgres:5432/booksdb
+      - BOOKAPI_RABBITMQ=amqp://guest:guest@rabbitmq:5672/
       - GOPATH=$HOME/go
       - PATH=$PATH:/usr/local/go/bin
       - SECRET_KEY=mysecretkeyshh
     ports:
       - "5001:5001"
 
-volumes:
-  postgres-data:
+  shops-api:
+    image: shops-im
+    container_name: shops
+    build:
+      context: .
+      dockerfile: ./shops/cmd/Dockerfile
+    depends_on:
+      - users-api
+      - books-api
+    networks:
+      - library
+    environment:
+      - BOOKAPI_SHOPS_SERVER_PORT=5002
+      - BOOKAPI_POSTGRES_BOOKS=postgres://tmosto:tmosto@postgres:5432/booksdb
+      - GOPATH=$HOME/go
+      - PATH=$PATH:/usr/local/go/bin
+      - SECRET_KEY=mysecretkeyshh
+    ports:
+      - "5002:5002"
+
+  transactions-api:
+    image: transactions-im
+    container_name: transactions
+    build:
+      context: .
+      dockerfile: ./transactions/cmd/Dockerfile
+    depends_on:
+      - users-api
+      - books-api
+    networks:
+      - library
+    environment:
+      - BOOKAPI_TRANSACTIONS_SERVER_PORT=5003
+      - BOOKAPI_POSTGRES_BOOKS=postgres://tmosto:tmosto@postgres:5432/booksdb
+      - BOOKAPI_RABBITMQ=amqp://guest:guest@rabbitmq:5672/
+      - GOPATH=$HOME/go
+      - PATH=$PATH:/usr/local/go/bin
+      - SECRET_KEY=mysecretkeyshh
+    ports:
+      - "5003:5003"

@@ -16,8 +16,9 @@ type RabbitMQ struct {
 
 func NewConn(cfg config.GlobalEnv) (*RabbitMQ, error) {
 	connection, err := amqp091.Dial(cfg.RabbitMQ)
+
 	if err != nil {
-		fmt.Printf("ERROR: %v", err)
+		fmt.Printf("RabbitMQ connection error: %v", err)
 		panic(err)
 	}
 

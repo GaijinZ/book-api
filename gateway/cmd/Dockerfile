@@ -8,6 +8,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY gateway ./gateway
+COPY pkg/config ./pkg/config
+COPY pkg/logger ./pkg/logger
+COPY pkg/utils ./pkg/utils
+COPY pkg/redis ./pkg/redis
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /gateway-build ./gateway/cmd
 

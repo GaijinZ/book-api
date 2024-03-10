@@ -15,6 +15,7 @@ Project is created with:
 * Redis
 * RabbitMQ
 * Logrus
+* Swagger
 
 ## Run app
 * Vagrant

@@ -8,9 +8,8 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY users ./users
-COPY pkg/middleware ./pkg/middleware
-COPY pkg/password-hash.go ./pkg/password-hash.go
-COPY pkg/sql.go ./pkg/sqp.go
+COPY books/models ./books/models
+COPY pkg ./pkg
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /userapi-build ./users/cmd
 
