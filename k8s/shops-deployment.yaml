@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shops-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shops
+  template:
+    metadata:
+      labels:
+        app: shops
+    spec:
+      containers:
+        - name: shops-container
+          image: tmosto/booksapi-go:shops
+          ports:
+            - containerPort: 5002
+          env:
+            - name: BOOKAPI_SHOPS_SERVER_PORT
+              value: "5002"
+            - name: BOOKAPI_POSTGRES_BOOKS
+              value: postgres://tmosto:tmosto@10.97.136.53:5432/booksdb
+            - name: BOOKAPI_RABBITMQ
+              value: amqp://guest:guest@10.99.15.44:5672/
+            - name: BOOKAPI_SECRET_KEY
+              value: mysecretkeyshh
+            - name: PGSSLMODE
+              value: disable

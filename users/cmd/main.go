@@ -53,6 +53,8 @@ func main() {
 		log.Errorf("Failed to configure db connection: %v", err)
 	}
 
+	log.Infof("Pinging postgres: %v", db.Ping())
+
 	redisClient, err := redis.NewRedis(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)

@@ -29,14 +29,13 @@ func NewDB(ctx context.Context, configDB DBConfig) (*DB, error) {
 
 	db, err := sql.Open(configDB.DriverName, configDB.DataSourceName)
 	if err != nil {
+		log.Errorf("Failed to connect to database: %v", configDB.DriverName)
 		return nil, err
 	}
 
 	db.SetMaxOpenConns(configDB.MaxOpenConns)
 	db.SetMaxIdleConns(configDB.MaxIdleConns)
 	db.SetConnMaxLifetime(configDB.ConnMaxLifetime)
-
-	log.Infof("Postgres connected!")
 
 	return &DB{DB: db}, nil
 }
